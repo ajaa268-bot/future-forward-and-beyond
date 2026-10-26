@@ -156,6 +156,30 @@ const BARRIER_BLOCKS = [
     helpSummary: 'Included: Walk-in mental health & peer support'
   },
   {
+    id: 'Free Counselors & Emotional Support',
+    title: 'Free Counselors & Talk Therapy',
+    subtitle: 'Moving Forward (25+ languages), Options+, Sources BC & Indigenous Elders',
+    helpSummary: 'Included: Free counselors (no doctor note needed)'
+  },
+  {
+    id: 'Pregnancy, Baby & Family Support',
+    title: 'Pregnancy, Maternity & Baby Care',
+    subtitle: 'Maxxine Wright, Healthiest Babies Possible, Tiny Bundles formula/diapers & prenatal care',
+    helpSummary: 'Included: Free diapers, formula, groceries & midwife'
+  },
+  {
+    id: 'Hospitals, Doctors & Medical Labs',
+    title: 'Hospitals, Walk-In Doctors & Labs',
+    subtitle: '24/7 Hospital ER social workers, Urgent Care doctors, LifeLabs & No-ID Street Nurses',
+    helpSummary: 'Included: Same-day doctor, bloodwork & ultrasound'
+  },
+  {
+    id: 'Youth, Families & Seniors (55+)',
+    title: 'All Ages: Youth, Families & Seniors',
+    subtitle: 'Foundry (12–24), $1,250/mo Child Care subsidy, Seniors SAFER rent & Better at Home',
+    helpSummary: 'Included: Youth, family & seniors (55+) support'
+  },
+  {
     id: 'Disability (PWD) / Income Assistance',
     title: 'PWD ($1,500+/mo) & Leisure Pass',
     subtitle: 'Disability assistance, crisis grants, $52/yr Bus Pass & FREE Pool/Gym/Shower Pass',

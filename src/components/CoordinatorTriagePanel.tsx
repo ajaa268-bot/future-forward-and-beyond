@@ -34,6 +34,10 @@ interface CoordinatorTriagePanelProps {
 
 type PartnerFilter =
   | 'ALL'
+  | 'COUNSELORS_THERAPY'
+  | 'PREGNANCY_BABY'
+  | 'HOSPITALS_LABS'
+  | 'ALL_AGES_SENIORS_YOUTH'
   | 'OPTIONS_PLUS'
   | 'SOURCES_BC'
   | 'LOCAL_SOCIETIES'
@@ -198,6 +202,86 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
       if (!haystack.includes(q)) return false;
     }
 
+    if (partnerFilter === 'COUNSELORS_THERAPY') {
+      return (
+        haystack.includes('counselor') ||
+        haystack.includes('counselors') ||
+        haystack.includes('counseling') ||
+        haystack.includes('counselling') ||
+        haystack.includes('therapy') ||
+        haystack.includes('therapist') ||
+        haystack.includes('moving forward') ||
+        haystack.includes('kuu-us') ||
+        haystack.includes('frafca') ||
+        haystack.includes('sacs') ||
+        haystack.includes('cmha') ||
+        haystack.includes('foundry')
+      );
+    }
+    if (partnerFilter === 'PREGNANCY_BABY') {
+      return (
+        haystack.includes('pregnancy') ||
+        haystack.includes('pregnant') ||
+        haystack.includes('prenatal') ||
+        haystack.includes('maternity') ||
+        haystack.includes('baby') ||
+        haystack.includes('newborn') ||
+        haystack.includes('infant') ||
+        haystack.includes('perinatal') ||
+        haystack.includes('maxxine wright') ||
+        haystack.includes('healthiest babies') ||
+        haystack.includes('tiny bundles') ||
+        haystack.includes('fir square') ||
+        haystack.includes('diapers') ||
+        haystack.includes('formula') ||
+        haystack.includes('sexual health')
+      );
+    }
+    if (partnerFilter === 'HOSPITALS_LABS') {
+      return (
+        haystack.includes('hospital') ||
+        haystack.includes('hospitals') ||
+        haystack.includes('upcc') ||
+        haystack.includes('urgent') ||
+        haystack.includes('lifelabs') ||
+        haystack.includes('bloodwork') ||
+        haystack.includes('ultrasound') ||
+        haystack.includes('x-ray') ||
+        haystack.includes('quibble creek') ||
+        haystack.includes('street nurse') ||
+        haystack.includes('outpatient') ||
+        haystack.includes('jim pattison') ||
+        haystack.includes('surrey memorial') ||
+        haystack.includes('peace arch') ||
+        haystack.includes('royal columbian') ||
+        haystack.includes('vgh') ||
+        haystack.includes('st. paul')
+      );
+    }
+    if (partnerFilter === 'ALL_AGES_SENIORS_YOUTH') {
+      return (
+        haystack.includes('senior') ||
+        haystack.includes('seniors') ||
+        haystack.includes('elder') ||
+        haystack.includes('55+') ||
+        haystack.includes('65+') ||
+        haystack.includes('safer') ||
+        haystack.includes('better at home') ||
+        haystack.includes('brella') ||
+        haystack.includes('children') ||
+        haystack.includes('child care') ||
+        haystack.includes('childcare') ||
+        haystack.includes('family') ||
+        haystack.includes('families') ||
+        haystack.includes('jordan') ||
+        haystack.includes('youth') ||
+        haystack.includes('12–24') ||
+        haystack.includes('12-24') ||
+        haystack.includes('foundry') ||
+        haystack.includes('kids help phone') ||
+        haystack.includes('covenant house')
+      );
+    }
     if (partnerFilter === 'OPTIONS_PLUS') {
       return haystack.includes('options');
     }
@@ -584,17 +668,17 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
             </div>
           </div>
 
-          {/* 24/7 Emergency, Crisis, Shelter, Police/Fire/Ambulance & AA/NA/CA/CoDA Quick Access */}
+          {/* 24/7 Emergency, Crisis, Shelter, Counselors, Pregnancy, Hospitals/Labs & AA/NA/CA/CoDA Quick Access */}
           <div className="bg-gradient-to-r from-[#e5f5f2] via-[#eaf4fa] to-[#f4f0e6] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#145e54] flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-[#1ca796]" /> 24/7 Immediate Crisis, Shelter, First Responders &amp; Peer Recovery Lines
+                <Phone className="w-3.5 h-3.5 text-[#1ca796]" /> 24/7 Sanctuary Lines — Crisis, Counselors, Pregnancy, Hospitals, Labs &amp; All Ages
               </span>
               <button
                 type="button"
                 onClick={() =>
                   speakText(
-                    '24/7 Free Support Lines. Emergency Police, Fire, or Ambulance: call 9 1 1. Free 24/7 Nurse and HealthLink: call 8 1 1. Shelter beds and street help tonight: call or text 2 1 1. Suicide and mental health crisis line: call or text 9 8 8, or call 310-6789, or Fraser Health Crisis Line at 604-951-8855. Alcoholics Anonymous 24/7 line: 604-434-3933. Narcotics Anonymous: 604-873-1018. Cocaine Anonymous: 604-662-8500. CoDA and Al-Anon: 604-688-5588.'
+                    '24/7 Free Support Lines for All Ages. Emergency Police, Fire, or Ambulance: call 9 1 1. Free 24/7 Nurse and Urgent Care info: call 8 1 1. Shelter beds tonight: call or text 2 1 1. Suicide and mental health crisis line: call or text 9 8 8, or Fraser Crisis 604-951-8855. Free Counseling in 25 languages at Moving Forward: 778-321-3054. Pregnancy and Maxxine Wright Clinic: 604-587-3800. LifeLabs and Outpatient Labs: 1-877-849-3637. Seniors Line: 1-877-952-3181. Kids Help Phone: 1-800-668-6868. Alcoholics Anonymous: 604-434-3933. Narcotics Anonymous: 604-873-1018.'
                   )
                 }
                 className="text-[11px] font-semibold text-[#1b7a6e] hover:text-[#12323b] bg-white px-2.5 py-1 rounded-lg border border-[#bce5dd] flex items-center gap-1 cursor-pointer"
@@ -602,17 +686,23 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                 <Volume2 className="w-3.5 h-3.5" /> Read Numbers Out Loud
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
               <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#cde8e2]">
-                <div className="font-bold text-[#14343d]">Emergency, Nurse &amp; Shelter Tonight</div>
+                <div className="font-bold text-[#14343d]">Emergency, Nurse &amp; Shelter</div>
                 <div className="text-[#2c525c] mt-0.5">
-                  <strong>9-1-1</strong> (Police/Fire/Ambulance) • <strong>8-1-1</strong> (24/7 Nurse) • <strong>2-1-1</strong> (Shelter Beds)
+                  <strong>9-1-1</strong> (ER) • <strong>8-1-1</strong> (24/7 Nurse) • <strong>2-1-1</strong> (Shelter/Seniors) • <strong>9-8-8</strong> (Crisis)
                 </div>
               </div>
               <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#c5e0f0]">
-                <div className="font-bold text-[#164966]">24/7 Mental Health &amp; Car 67/87</div>
+                <div className="font-bold text-[#164966]">Free Counselors &amp; All Ages</div>
                 <div className="text-[#2c525c] mt-0.5">
-                  <strong>9-8-8</strong> or <strong>310-6789</strong> • Fraser Crisis: <strong>604-951-8855</strong> • Car 67: <strong>604-599-0502</strong>
+                  Counselor: <strong>778-321-3054</strong> • Youth: <strong>1-800-668-6868</strong> • Seniors: <strong>1-877-952-3181</strong>
+                </div>
+              </div>
+              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#cce8df]">
+                <div className="font-bold text-[#145e54]">Pregnancy, Hospitals &amp; Labs</div>
+                <div className="text-[#2c525c] mt-0.5">
+                  Pregnancy/Moms: <strong>604-587-3800</strong> • SMH ER: <strong>604-581-2211</strong> • Labs: <strong>604-587-3750</strong>
                 </div>
               </div>
               <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#dfd4c0]">
@@ -633,7 +723,7 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search Options+, Sources BC, homeless shelter, PWD subsidy, Leisure Pass, AA, NA, CA, CoDA, legal aid, Car 67, food banks..."
+                  placeholder="Search counselors, pregnancy, baby diapers/formula, hospitals, walk-in doctors, LifeLabs, seniors 55+, youth, shelters, Options+, Sources BC..."
                   className="w-full bg-white border border-[#dcd4c4] rounded-xl pl-9 pr-8 py-2 text-xs text-[#163038] placeholder:text-[#6c858d] focus:outline-none focus:border-[#2a9d8f]"
                 />
                 {searchQuery && (
@@ -662,7 +752,11 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
             <div className="flex flex-wrap items-center gap-1.5">
               {(
                 [
-                  { id: 'ALL', label: 'All Options' },
+                  { id: 'ALL', label: 'All Sanctuary Options (64+)' },
+                  { id: 'COUNSELORS_THERAPY', label: 'Free Counselors & Therapy' },
+                  { id: 'PREGNANCY_BABY', label: 'Pregnancy, Maternity & Baby Care' },
+                  { id: 'HOSPITALS_LABS', label: 'Hospitals, Walk-In Doctors & Labs' },
+                  { id: 'ALL_AGES_SENIORS_YOUTH', label: 'All Ages: Youth, Families & Seniors (55+)' },
                   { id: 'HOUSING_HOMELESS', label: 'Homelessness & Safe Shelter' },
                   { id: 'SUBSIDIES_LEISURE', label: 'Subsidies, PWD & Free Leisure Pass' },
                   { id: 'PHYSICAL_BARRIERS', label: 'Physical Barriers & Mobility' },

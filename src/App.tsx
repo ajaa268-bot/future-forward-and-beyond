@@ -26,6 +26,10 @@ import { ClientCompanionPhone } from './components/ClientCompanionPhone.js';
 type DeviceMode = 'split_copilot' | 'tablet_only' | 'phone_only' | 'architecture_ddl';
 type DirectoryCategoryFilter =
   | 'ALL'
+  | 'COUNSELORS_THERAPY'
+  | 'PREGNANCY_BABY'
+  | 'HOSPITALS_LABS'
+  | 'ALL_AGES_SENIORS_YOUTH'
   | 'HOUSING_HOMELESS'
   | 'SUBSIDIES_LEISURE'
   | 'PHYSICAL_BARRIERS'
@@ -282,13 +286,13 @@ export function App() {
             <div className="space-y-1.5 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 backdrop-blur-md border border-[#b7e4de] text-xs font-semibold text-[#136f63] shadow-2xs">
                 <Sun className="w-3.5 h-3.5 text-[#f4a261]" />
-                <span>Take a Breath • No Rush, No Paperwork Stress</span>
+                <span>Take a Breath • A Calm Sanctuary for All Ages &amp; Walks of Life</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-[#103038] tracking-tight">
                 Find Your Next Step at Your Own Easy Pace
               </h2>
               <p className="text-xs sm:text-sm text-[#355963] leading-relaxed">
-                You don’t need a resume or formal words here. Just tap what feels natural in everyday life—we’ll turn your hands-on strengths into a warm introduction to open local programs.
+                Whether you need a free counselor, pregnancy &amp; baby support, a walk-in doctor or lab, safe shelter, food, youth or seniors care, or hands-on training—just tap what feels natural. No resume or formal paperwork needed.
               </p>
             </div>
 
@@ -447,10 +451,10 @@ export function App() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-bold text-[#14343d]">
-                    All Verified Community Programs, Options+, Sources BC, Schools &amp; Local Food Banks
+                    Complete Lower Mainland Sanctuary Directory (64+ Verified Programs for All Ages)
                   </h3>
                   <p className="text-xs text-[#4b6a73] mt-0.5">
-                    Search across every Lower Mainland city and save any program or local food bank directly to your Pocket Phone Card.
+                    Counselors, Pregnancy &amp; Baby Care, Hospitals &amp; Labs, Youth &amp; Seniors (55+), Shelters, Subsidies, Options+, Sources BC, Schools &amp; Food Banks.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -482,7 +486,7 @@ export function App() {
                     type="text"
                     value={directorySearch}
                     onChange={(e) => setDirectorySearch(e.target.value)}
-                    placeholder="Search Options+, Sources BC, KPU, BCIT, VCC, Douglas, Surrey Food Bank, Cloverdale Kitchen, boots, transit..."
+                    placeholder="Search counselors, pregnancy, baby formula/diapers, hospitals, LifeLabs, seniors 55+, youth, Options+, Sources BC, shelters, food banks..."
                     className="w-full bg-white border border-[#dcd4c4] rounded-xl pl-9 pr-8 py-2 text-xs text-[#163038] placeholder:text-[#6c858d] focus:outline-none focus:border-[#2a9d8f]"
                   />
                   {directorySearch && (
@@ -499,7 +503,11 @@ export function App() {
                 <div className="flex flex-wrap items-center gap-1.5">
                   {(
                     [
-                      { id: 'ALL', label: 'All 45+ Programs & Resources' },
+                      { id: 'ALL', label: 'All 64+ Sanctuary Programs' },
+                      { id: 'COUNSELORS_THERAPY', label: 'Free Counselors & Therapy' },
+                      { id: 'PREGNANCY_BABY', label: 'Pregnancy, Maternity & Baby Care' },
+                      { id: 'HOSPITALS_LABS', label: 'Hospitals, Walk-In Doctors & Labs' },
+                      { id: 'ALL_AGES_SENIORS_YOUTH', label: 'All Ages: Youth, Families & Seniors (55+)' },
                       { id: 'HOUSING_HOMELESS', label: 'Homelessness & Safe Shelter' },
                       { id: 'SUBSIDIES_LEISURE', label: 'Subsidies, PWD & Leisure Pass' },
                       { id: 'PHYSICAL_BARRIERS', label: 'Physical Barriers & Mobility' },
@@ -563,6 +571,86 @@ export function App() {
                           .toLowerCase();
                         if (directorySearch.trim() && !hay.includes(directorySearch.trim().toLowerCase())) {
                           return false;
+                        }
+                        if (directoryCategory === 'COUNSELORS_THERAPY') {
+                          return (
+                            hay.includes('counselor') ||
+                            hay.includes('counselors') ||
+                            hay.includes('counseling') ||
+                            hay.includes('counselling') ||
+                            hay.includes('therapy') ||
+                            hay.includes('therapist') ||
+                            hay.includes('moving forward') ||
+                            hay.includes('kuu-us') ||
+                            hay.includes('frafca') ||
+                            hay.includes('sacs') ||
+                            hay.includes('cmha') ||
+                            hay.includes('foundry')
+                          );
+                        }
+                        if (directoryCategory === 'PREGNANCY_BABY') {
+                          return (
+                            hay.includes('pregnancy') ||
+                            hay.includes('pregnant') ||
+                            hay.includes('prenatal') ||
+                            hay.includes('maternity') ||
+                            hay.includes('baby') ||
+                            hay.includes('newborn') ||
+                            hay.includes('infant') ||
+                            hay.includes('perinatal') ||
+                            hay.includes('maxxine wright') ||
+                            hay.includes('healthiest babies') ||
+                            hay.includes('tiny bundles') ||
+                            hay.includes('fir square') ||
+                            hay.includes('diapers') ||
+                            hay.includes('formula') ||
+                            hay.includes('sexual health')
+                          );
+                        }
+                        if (directoryCategory === 'HOSPITALS_LABS') {
+                          return (
+                            hay.includes('hospital') ||
+                            hay.includes('hospitals') ||
+                            hay.includes('upcc') ||
+                            hay.includes('urgent') ||
+                            hay.includes('lifelabs') ||
+                            hay.includes('bloodwork') ||
+                            hay.includes('ultrasound') ||
+                            hay.includes('x-ray') ||
+                            hay.includes('quibble creek') ||
+                            hay.includes('street nurse') ||
+                            hay.includes('outpatient') ||
+                            hay.includes('jim pattison') ||
+                            hay.includes('surrey memorial') ||
+                            hay.includes('peace arch') ||
+                            hay.includes('royal columbian') ||
+                            hay.includes('vgh') ||
+                            hay.includes('st. paul')
+                          );
+                        }
+                        if (directoryCategory === 'ALL_AGES_SENIORS_YOUTH') {
+                          return (
+                            hay.includes('senior') ||
+                            hay.includes('seniors') ||
+                            hay.includes('elder') ||
+                            hay.includes('55+') ||
+                            hay.includes('65+') ||
+                            hay.includes('safer') ||
+                            hay.includes('better at home') ||
+                            hay.includes('brella') ||
+                            hay.includes('children') ||
+                            hay.includes('child care') ||
+                            hay.includes('childcare') ||
+                            hay.includes('family') ||
+                            hay.includes('families') ||
+                            hay.includes('jordan') ||
+                            hay.includes('youth') ||
+                            hay.includes('12–24') ||
+                            hay.includes('12-24') ||
+                            hay.includes('foundry') ||
+                            hay.includes('kids help phone') ||
+                            hay.includes('covenant house')
+                          );
                         }
                         if (directoryCategory === 'OPTIONS_PLUS') return hay.includes('options');
                         if (directoryCategory === 'SOURCES_BC') return hay.includes('sources');

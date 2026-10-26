@@ -171,17 +171,17 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
           </div>
         )}
 
-        {/* 3B. Pocket 24/7 Emergency, Shelter, Mental Health & Recovery Card */}
+        {/* 3B. Pocket 24/7 Emergency, Counselors, Pregnancy, Hospitals/Labs & All-Ages Sanctuary Card */}
         <div className="bg-gradient-to-br from-[#e6f6f3] to-[#eaf4fa] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase text-[#145e54]">
-              24/7 Crisis, Shelter, First Responders &amp; Recovery
+              24/7 Sanctuary: Crisis, Counselors, Pregnancy &amp; Hospitals
             </span>
             <button
               type="button"
               onClick={() =>
                 speakText(
-                  'Pocket 24/7 Numbers. Emergency Police, Fire, or Ambulance: 9 1 1. Free 24/7 Nurse: 8 1 1. Shelter beds tonight: 2 1 1. Mental health crisis line: 9 8 8 or Fraser Crisis 604-951-8855. Surrey Car 67 mental health team: 604-599-0502. AA: 604-434-3933. NA: 604-873-1018. CA: 604-662-8500. CoDA: 604-688-5588. Legal Aid: 604-408-2172.'
+                  'Pocket 24/7 Numbers for All Ages. Emergency Police, Fire, or Ambulance: 9 1 1. Free 24/7 Nurse: 8 1 1. Shelter beds tonight: 2 1 1. Mental health crisis line: 9 8 8 or Fraser Crisis 604-951-8855. Free Counselor in 25 languages at Moving Forward: 778-321-3054. Pregnancy and Baby Care at Maxxine Wright: 604-587-3800. Surrey Memorial Hospital: 604-581-2211. LifeLabs and No-ID Street Nurse Lab: 604-587-3750. Youth Kids Help Phone: 1-800-668-6868. Seniors Line: 1-877-952-3181. AA: 604-434-3933. NA: 604-873-1018.'
                 )
               }
               className="text-[#145e54] hover:text-[#12323b] cursor-pointer"
@@ -195,16 +195,22 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
               <strong>Emergency / Nurse / Shelter:</strong> 9-1-1 • Nurse: 8-1-1 • Shelter: 2-1-1
             </div>
             <div>
-              <strong>Mental Health Crisis:</strong> 9-8-8 • 310-6789 • Fraser: 604-951-8855
+              <strong>Mental Health &amp; Crisis:</strong> 9-8-8 • Fraser: 604-951-8855 • Car 67: 604-599-0502
             </div>
             <div>
-              <strong>Car 67 (Surrey):</strong> 604-599-0502 • <strong>Car 87 (Van):</strong> 604-675-3700
+              <strong>Free Counselor (25+ Lang):</strong> 778-321-3054 • <strong>Options+:</strong> 604-596-4321
             </div>
             <div>
-              <strong>AA:</strong> 604-434-3933 • <strong>NA:</strong> 604-873-1018 • <strong>CA:</strong> 604-662-8500
+              <strong>Pregnancy &amp; Baby Care:</strong> 604-587-3800 • <strong>Tiny Bundles:</strong> 604-581-5443
             </div>
             <div>
-              <strong>CoDA:</strong> 604-688-5588 • <strong>Legal Aid:</strong> 604-408-2172
+              <strong>Hospitals &amp; No-ID Labs:</strong> SMH: 604-581-2211 • Street Lab: 604-587-3750
+            </div>
+            <div>
+              <strong>Youth (12–24):</strong> 1-800-668-6868 • <strong>Seniors (55+):</strong> 1-877-952-3181
+            </div>
+            <div>
+              <strong>AA:</strong> 604-434-3933 • <strong>NA:</strong> 604-873-1018 • <strong>CA:</strong> 604-662-8500 • <strong>Legal:</strong> 604-408-2172
             </div>
           </div>
         </div>
