@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Wrench,
   Cpu,
   Headphones,
   FileText,
   Mic,
+  MicOff,
   CheckCircle2,
   Sparkles,
   Volume2,
   HeartHandshake,
-  Compass
+  Compass,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
@@ -126,12 +129,16 @@ const VOICE_PRESETS = [
     text: "Last month at a big family and community dinner, one side of the stove stopped working right when everyone was waiting to eat. I turned off the bad burner, moved the big pots over, and got all the plates served warm on time. I'm also the person friends call when their TV, speaker, or computer isn't working—I just check the cords one by one until it works."
   },
   {
-    label: 'Example 2: Fixing Bikes, Tools & Building Things by Hand',
-    text: "My friend's bike brakes were stuck and the chain kept slipping. I took the wheel off, cleaned and tightened the parts, and got it riding smooth again. Give me real tools and a workbench and I can figure out how anything goes together—I just hate filling out long forms."
+    label: 'Example 2: Fixing Bikes, Tools & Hands-On Trades School (KPU / BCIT)',
+    text: "My friend's bike brakes were stuck and the chain kept slipping. I took the wheel off, cleaned and tightened the parts, and got it riding smooth again. Give me real tools at a school shop like KPU or BCIT and I can figure out how anything goes together—I just hate filling out long forms."
   },
   {
     label: 'Example 3: Helping Outdoors, Gardening & Yard Work',
     text: "After the heavy rain, I helped clear out the community garden beds, dug a small path so the water would drain away, and organized all the tools in the shed. I feel best working outside and moving around with a friendly group instead of sitting indoors."
+  },
+  {
+    label: 'Example 4: Community Kitchens, Options+, Sources BC & Local Food Banks',
+    text: "I love helping out with food prep, sorting fresh produce, and making sure neighbors get a warm meal. I want to connect with Options+, Sources BC, or a local food bank and teaching kitchen where I can get FoodSafe, bus tickets, and hands-on work experience."
   }
 ];
 
@@ -180,7 +187,18 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
   onSynthesizeVoice,
   isSynthesizing
 }) => {
+  const [isRecordingMic, setIsRecordingMic] = useState(false);
+  const [micStatusMessage, setMicStatusMessage] = useState<string | null>(null);
   const activeModule = session.active_module_on_canvas || 'TROUBLESHOOTER';
+
+  const MODULE_ORDER: Array<{ code: ModuleCode; label: string }> = [
+    { code: 'TROUBLESHOOTER', label: '1. Everyday Situations' },
+    { code: 'SPEC_SHEET', label: '2. How You Learn Best' },
+    { code: 'VOICE_BLUEPRINT', label: '3. Tell Your Story' },
+    { code: 'LOADOUT_DECK', label: '4. Work You’d Enjoy' },
+    { code: 'PRESSURE_VALVE', label: '5. Help Needed Today' }
+  ];
+  const currentStepIdx = MODULE_ORDER.findIndex((m) => m.code === activeModule);
 
   const speakPrompt = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -188,6 +206,64 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.98;
       window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleToggleMic = () => {
+    const SpeechRec =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      setMicStatusMessage(
+        'Voice mic is not enabled in this browser—loaded a sample story for you to customize!'
+      );
+      const nextStory = VOICE_PRESETS[3].text;
+      onPatchSession({ voice_transcript: nextStory });
+      onSynthesizeVoice(nextStory);
+      return;
+    }
+
+    if (isRecordingMic) {
+      setIsRecordingMic(false);
+      setMicStatusMessage('Stopped listening.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRec();
+      recognition.lang = 'en-CA';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      setIsRecordingMic(true);
+      setMicStatusMessage('Listening now... speak in your own everyday words.');
+
+      recognition.onresult = (event: any) => {
+        const spokenText = event.results?.[0]?.[0]?.transcript || '';
+        if (spokenText) {
+          const combined = session.voice_transcript
+            ? `${session.voice_transcript} ${spokenText}`
+            : spokenText;
+          onPatchSession({ voice_transcript: combined });
+          onSynthesizeVoice(combined);
+          setMicStatusMessage('Got it! Updated your story and matched programs.');
+        }
+        setIsRecordingMic(false);
+      };
+
+      recognition.onerror = () => {
+        setIsRecordingMic(false);
+        setMicStatusMessage(
+          'Could not access microphone—tap any example story above or type a few words below.'
+        );
+      };
+
+      recognition.onend = () => {
+        setIsRecordingMic(false);
+      };
+
+      recognition.start();
+    } catch {
+      setIsRecordingMic(false);
+      setMicStatusMessage('Tap any example story above or type below.');
     }
   };
 
@@ -610,22 +686,37 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
             <div className="text-xs font-semibold text-[#48656e] uppercase mb-2">
               Tap a Real-Life Example Below (or share your own story):
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {VOICE_PRESETS.map((preset, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    onPatchSession({ voice_transcript: preset.text });
-                    onSynthesizeVoice(preset.text);
-                  }}
-                  className="p-3.5 rounded-2xl linen-card border border-[#e2d9c8] hover:border-[#2a9d8f] hover:bg-white text-left text-xs text-[#37535b] transition-all cursor-pointer"
-                >
-                  <div className="text-[11px] text-[#1b7a6e] font-bold mb-1">
-                    {preset.label}
-                  </div>
-                  <div className="line-clamp-2 text-[#5a757d] leading-relaxed">{preset.text}</div>
-                </button>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {VOICE_PRESETS.map((preset, idx) => {
+                const isSelectedPreset = session.voice_transcript === preset.text;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      onPatchSession({ voice_transcript: preset.text });
+                      onSynthesizeVoice(preset.text);
+                    }}
+                    className={`p-3.5 rounded-2xl border text-left text-xs transition-all cursor-pointer ${
+                      isSelectedPreset
+                        ? 'bg-[#e6f6f3] border-[#2a9d8f] text-[#154d46] shadow-2xs'
+                        : 'linen-card border-[#e2d9c8] hover:border-[#2a9d8f] hover:bg-white text-[#37535b]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-[11px] text-[#1b7a6e] font-bold">
+                        {preset.label}
+                      </span>
+                      {isSelectedPreset && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#2a9d8f] text-white">
+                          ✓ Loaded
+                        </span>
+                      )}
+                    </div>
+                    <div className="line-clamp-2 text-[#5a757d] leading-relaxed">{preset.text}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -634,17 +725,44 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
               <span className="text-xs font-semibold uppercase text-[#1b7a6e] flex items-center gap-1.5">
                 <Mic className="w-4 h-4" /> Your Everyday Story (No Spelling Worries)
               </span>
-              <button
-                disabled={isSynthesizing}
-                onClick={() => onSynthesizeVoice(session.voice_transcript)}
-                className="px-4 py-2 rounded-xl bg-[#2a9d8f] hover:bg-[#21867a] disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
-              >
-                <Sparkles className="w-4 h-4" />
-                {isSynthesizing
-                  ? 'Finding Your Strengths...'
-                  : 'Turn My Story Into Job Strengths'}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleToggleMic}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all border ${
+                    isRecordingMic
+                      ? 'bg-[#e76f51] text-white border-[#e76f51] animate-pulse'
+                      : 'bg-white hover:bg-[#e6f6f3] text-[#1b7a6e] border-[#bce5dd]'
+                  }`}
+                >
+                  {isRecordingMic ? (
+                    <>
+                      <MicOff className="w-4 h-4" /> Stop Listening
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4" /> Speak Into Mic
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  disabled={isSynthesizing}
+                  onClick={() => onSynthesizeVoice(session.voice_transcript)}
+                  className="px-4 py-2 rounded-xl ocean-btn disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {isSynthesizing
+                    ? 'Finding Your Strengths...'
+                    : 'Turn My Story Into Job Strengths'}
+                </button>
+              </div>
             </div>
+            {micStatusMessage && (
+              <div className="text-xs font-medium text-[#1b7a6e] bg-[#e6f6f3] border border-[#bce5dd] rounded-xl px-3 py-1.5">
+                {micStatusMessage}
+              </div>
+            )}
             <textarea
               rows={3}
               value={session.voice_transcript}
@@ -841,6 +959,60 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
           </div>
         </div>
       )}
+
+      {/* Bottom Step Navigation Footer Bar */}
+      <div className="linen-card border-t border-[#e2d6c1] px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          disabled={currentStepIdx <= 0}
+          onClick={() => {
+            if (currentStepIdx > 0) {
+              onPatchSession({
+                active_module_on_canvas: MODULE_ORDER[currentStepIdx - 1].code
+              });
+            }
+          }}
+          className="px-4 py-2 rounded-xl bg-white hover:bg-[#e6f6f3] disabled:opacity-40 disabled:cursor-not-allowed border border-[#dcd4c4] text-xs font-semibold text-[#284952] flex items-center gap-1.5 cursor-pointer transition-all"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          {currentStepIdx > 0
+            ? `Back: ${MODULE_ORDER[currentStepIdx - 1].label}`
+            : 'Step 1 of 5'}
+        </button>
+
+        <span className="text-xs font-medium text-[#4a656d]">
+          Step {currentStepIdx + 1} of {MODULE_ORDER.length} • Everything saves automatically
+        </span>
+
+        {currentStepIdx < MODULE_ORDER.length - 1 ? (
+          <button
+            type="button"
+            onClick={() => {
+              onPatchSession({
+                active_module_on_canvas: MODULE_ORDER[currentStepIdx + 1].code,
+                completed_modules_json: markModuleCompleted(activeModule)
+              });
+            }}
+            className="px-4 py-2 rounded-xl ocean-btn text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+          >
+            Next: {MODULE_ORDER[currentStepIdx + 1].label}
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              onPatchSession({
+                completed_modules_json: markModuleCompleted('PRESSURE_VALVE')
+              });
+              window.scrollTo({ top: 520, behavior: 'smooth' });
+            }}
+            className="px-4 py-2 rounded-xl ocean-btn text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+          >
+            See My Matched Programs &amp; Food Banks ↓
+          </button>
+        )}
+      </div>
     </div>
   );
 };

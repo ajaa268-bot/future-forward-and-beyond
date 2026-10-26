@@ -30,15 +30,15 @@
         {
           "what_you_did": "Kept a big dinner moving and got everyone fed on time when a stove burner stopped working",
           "pro_translation": "Cooking Under Pressure, Kitchen Prep & Staying Calm When Busy",
-          "noc_domain": "Career Path: Kitchen Prep, Line Cook & Food Services"
+          "noc_domain": "Good Fit: Options+ Teaching Kitchen, VCC Culinary & Local Food Programs"
         },
         {
           "what_you_did": "Helping friends fix TVs, speakers, and computers by checking connections step by step",
           "pro_translation": "Practical Tech Setup, Cable Checking & Everyday Troubleshooting",
-          "noc_domain": "Career Path: Tech Repair, Electronics Bench & Event Setup"
+          "noc_domain": "Good Fit: KPU Tech, BCIT Trades Discovery & Repair Workshops"
         }
       ],
-      "coordinator_private_notes": "Great practical problem-solver who learns best by doing things hands-on rather than reading long forms. Match with hands-on kitchen, workshop, or repair programs where staff help fill out any paperwork."
+      "coordinator_private_notes": "Great practical problem-solver who learns best by doing things hands-on rather than reading long forms. Match with Options+, Sources BC, KPU/BCIT/VCC hands-on programs, and same-day food & transit support."
     },
     "completed_modules_json": [
       "TROUBLESHOOTER",
@@ -57,6 +57,7 @@
     ],
     "active_barriers": [
       "Transit Pass / Compass",
+      "Groceries / Meals",
       "Paperwork / Scribe Help"
     ],
     "loadout_cards": [
@@ -78,11 +79,11 @@
       },
       {
         "id": "card-trades",
-        "title": "Hands-On Tools, Bikes & Building",
+        "title": "Hands-On Tools, Bikes & Trades Schools",
         "category": "Trades_Apprenticeship",
         "icon": "Wrench",
         "status": "Test Run",
-        "tagline": "Using real tools to build, repair, and put things together"
+        "tagline": "Using real tools at KPU, BCIT, or local repair shops"
       },
       {
         "id": "card-stage",
@@ -110,10 +111,10 @@
       }
     ],
     "pinned_program_id": "prog-surrey-culinary-01",
-    "pinned_relief_program_id": "prog-surrey-relief-04",
-    "next_micro_step_text": "Marcus will call Sarah (604-584-5811) with you for a friendly intro to Surrey Teaching Kitchen + give you Compass bus tickets today.",
+    "pinned_relief_program_id": "prog-sources-foodhub-04",
+    "next_micro_step_text": "Call Sarah at Options+ Teaching Kitchen (604-584-5811) together for a friendly intro + pick up fresh groceries & bus tickets today.",
     "coordinator_scribe_required": true,
     "active_module_on_canvas": "TROUBLESHOOTER",
-    "updated_at": "2026-10-26T21:32:56.934Z"
+    "updated_at": "2026-10-26T21:56:49.512Z"
   }
 ]

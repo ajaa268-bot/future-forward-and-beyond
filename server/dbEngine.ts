@@ -33,16 +33,9 @@ export class NavigatorDatabaseEngine {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 
-    if (fs.existsSync(PROGRAMS_FILE)) {
-      try {
-        this.programs = JSON.parse(fs.readFileSync(PROGRAMS_FILE, 'utf-8'));
-      } catch {
-        this.programs = [...SEEDED_VERIFIED_PROGRAMS];
-      }
-    } else {
-      this.programs = [...SEEDED_VERIFIED_PROGRAMS];
-      fs.writeFileSync(PROGRAMS_FILE, JSON.stringify(this.programs, null, 2), 'utf-8');
-    }
+    // Always sync with SEEDED_VERIFIED_PROGRAMS so newly added agencies, schools, and food hubs are present
+    this.programs = [...SEEDED_VERIFIED_PROGRAMS];
+    fs.writeFileSync(PROGRAMS_FILE, JSON.stringify(this.programs, null, 2), 'utf-8');
 
     if (fs.existsSync(SESSION_FILE)) {
       try {
@@ -114,9 +107,19 @@ export class NavigatorDatabaseEngine {
     return reset;
   }
 
+  private matchesCity(progCity: string, filterCity?: string): 'exact' | 'regional' | 'none' {
+    if (!filterCity || filterCity === 'All') return 'exact';
+    const p = progCity.toLowerCase();
+    const f = filterCity.toLowerCase();
+    if (p === f || p.includes(f) || f.includes(p)) return 'exact';
+    // Neighboring South Fraser / Lower Mainland proximity
+    const southFraser = ['surrey', 'white rock / south surrey', 'langley', 'delta'];
+    if (southFraser.includes(p) && southFraser.includes(f)) return 'regional';
+    return 'none';
+  }
+
   /**
    * Executes the deterministic `verify_programs_ddl` check against `coordinator_dual_axis_check`
-   * Mirrors the PostgreSQL view + parameterized filtering in Part 7 & Part 8.2
    */
   public verifyProgramsDDL(
     filters: DDLQueryFilterParams,
@@ -129,7 +132,7 @@ export class NavigatorDatabaseEngine {
     const whereClauses: string[] = ["operational_status = 'Active'", 'days_since_verified <= 14'];
 
     if (filters.municipality && filters.municipality !== 'All') {
-      whereClauses.push(`municipality ILIKE '${filters.municipality}'`);
+      whereClauses.push(`municipality ILIKE '%${filters.municipality}%'`);
     }
     if (filters.supports_high_skill_low_text !== undefined) {
       whereClauses.push(`supports_high_skill_low_text = ${filters.supports_high_skill_low_text}`);
@@ -152,37 +155,37 @@ export class NavigatorDatabaseEngine {
 
     const sql_executed = `SELECT * FROM coordinator_dual_axis_check\nWHERE ${whereClauses.join('\n  AND ')}\nORDER BY waitlist_weeks_estimate ASC, days_since_verified ASC;`;
 
-    // Filter active & verified < 14 days
     const activePool = this.programs.filter(
       (p) => p.operational_status === 'Active' && p.days_since_verified <= 14
     );
 
-    // 1. Immediate Relief Matches (Maslow Tier 1)
-    const immediate_relief_matches = activePool.filter(
-      (p) =>
-        p.category === 'Survival_Relief' &&
-        (!filters.municipality ||
-          filters.municipality === 'All' ||
-          p.municipality.toLowerCase() === filters.municipality.toLowerCase() ||
-          p.municipality === 'Surrey')
-    );
+    // 1. Immediate Relief & Food Matches (Maslow Tier 1)
+    const immediate_relief_matches = activePool
+      .filter((p) => p.category === 'Survival_Relief')
+      .map((prog) => {
+        const cityFit = this.matchesCity(prog.municipality, filters.municipality);
+        const score = cityFit === 'exact' ? 100 : cityFit === 'regional' ? 50 : 10;
+        return { prog, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map((x) => x.prog);
 
-    // 2. Primary Bridge / Skill Matches scored by Dual-Axis & Barrier fit
+    // 2. Primary Skill, School, Options+, Sources BC & Bridge Matches
     const bridgePool = activePool.filter((p) => p.category !== 'Survival_Relief');
+
+    const wantsMeals = session?.active_barriers.includes('Groceries / Meals');
 
     const scored = bridgePool
       .map((prog) => {
         let score = 0;
 
-        // Municipality match
-        if (
-          filters.municipality &&
-          filters.municipality !== 'All' &&
-          prog.municipality.toLowerCase() === filters.municipality.toLowerCase()
-        ) {
-          score += 30;
-        } else if (!filters.municipality || filters.municipality === 'All') {
-          score += 15;
+        const cityFit = this.matchesCity(prog.municipality, filters.municipality);
+        if (cityFit === 'exact') {
+          score += 45;
+        } else if (cityFit === 'regional') {
+          score += 20;
+        } else {
+          score += 5;
         }
 
         // High-Skill / Low-Text alignment
@@ -200,7 +203,7 @@ export class NavigatorDatabaseEngine {
           score += 15;
         }
 
-        // Government ID filter (hard barrier avoidance)
+        // Government ID filter
         if (filters.requires_government_id === false && !prog.requires_government_id) {
           score += 15;
         } else if (filters.requires_government_id === false && prog.requires_government_id) {
@@ -211,6 +214,7 @@ export class NavigatorDatabaseEngine {
         if (filters.provides_transit_tickets && prog.provides_transit_tickets) score += 10;
         if (filters.provides_gear_or_boots && prog.provides_gear_or_boots) score += 10;
         if (filters.scribe_or_reader_available && prog.scribe_or_reader_available) score += 10;
+        if (wantsMeals && prog.provides_food_or_meals) score += 12;
 
         // Session Loadout & Problem-Solving Tier alignment
         if (session) {
@@ -229,12 +233,11 @@ export class NavigatorDatabaseEngine {
             .map((c) => c.category);
 
           if (lockedCategories.includes(prog.category)) score += 25;
-          if (scrappedCategories.includes(prog.category)) score -= 35;
+          if (scrappedCategories.includes(prog.category)) score -= 25;
         }
 
         return { prog, score };
       })
-      .filter((item) => item.score > 10)
       .sort((a, b) => b.score - a.score);
 
     return {

@@ -32,10 +32,14 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
   ddl,
   onPatchSession
 }) => {
+  const allAvailable = [...ddl.primary_matches, ...ddl.immediate_relief_matches];
   const pinnedProgram =
-    ddl.primary_matches.find((p) => p.program_id === session.pinned_program_id) ||
+    allAvailable.find((p) => p.program_id === session.pinned_program_id) ||
     ddl.primary_matches[0];
-  const reliefProgram = ddl.immediate_relief_matches[0];
+  const reliefProgram =
+    ddl.immediate_relief_matches.find(
+      (p) => p.program_id === session.pinned_relief_program_id
+    ) || ddl.immediate_relief_matches[0];
 
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -136,14 +140,34 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
           </div>
         )}
 
-        {/* 3. Immediate Help Today */}
+        {/* 3. Saved Local Food Bank & Immediate Help Today */}
         {reliefProgram && (
-          <div className="bg-[#eaf4fa] border border-[#bddbf0] rounded-2xl p-3.5 space-y-1">
-            <div className="text-[10px] font-bold uppercase text-[#1e5678]">
-              ★ Help Available Today (Meals &amp; Bus Tickets)
+          <div className="bg-[#eaf4fa] border border-[#bddbf0] rounded-2xl p-3.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase text-[#1e5678]">
+                ★ Saved Food Bank &amp; Same-Day Help ({reliefProgram.municipality})
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  speakText(
+                    `Food bank and same-day help: ${reliefProgram.program_name} in ${reliefProgram.municipality}. Transit: ${reliefProgram.nearest_transit_stop}. Contact: ${reliefProgram.contact_lead_name} at ${reliefProgram.contact_phone_or_email}.`
+                  )
+                }
+                className="text-[#1e5678] hover:text-[#163038] cursor-pointer"
+                title="Listen Out Loud"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+              </button>
             </div>
             <div className="text-xs font-bold text-[#163038]">{reliefProgram.program_name}</div>
-            <div className="text-[11px] text-[#48656e]">{reliefProgram.nearest_transit_stop}</div>
+            <div className="text-[11px] text-[#35565f]">{reliefProgram.organization_name}</div>
+            <div className="text-[11px] text-[#23638a] font-medium flex items-center gap-1 pt-0.5">
+              <Bus className="w-3 h-3 shrink-0" /> {reliefProgram.nearest_transit_stop}
+            </div>
+            <div className="text-[11px] text-[#1b7a6e] font-medium flex items-center gap-1">
+              <Phone className="w-3 h-3 shrink-0" /> {reliefProgram.contact_lead_name} ({reliefProgram.contact_phone_or_email})
+            </div>
           </div>
         )}
 

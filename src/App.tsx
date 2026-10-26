@@ -9,7 +9,10 @@ import {
   Sparkles,
   Sun,
   Waves,
-  Wind
+  Wind,
+  Search,
+  Pin,
+  X
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
@@ -21,6 +24,13 @@ import { CoordinatorTriagePanel } from './components/CoordinatorTriagePanel.js';
 import { ClientCompanionPhone } from './components/ClientCompanionPhone.js';
 
 type DeviceMode = 'split_copilot' | 'tablet_only' | 'phone_only' | 'architecture_ddl';
+type DirectoryCategoryFilter =
+  | 'ALL'
+  | 'OPTIONS_PLUS'
+  | 'SOURCES_BC'
+  | 'SCHOOLS'
+  | 'FOOD_BANKS'
+  | 'HANDS_ON';
 
 export function App() {
   const [session, setSession] = useState<ClientWorkbookSession | null>(null);
@@ -29,6 +39,11 @@ export function App() {
     primary_matches: VerifiedProgramRecord[];
     immediate_relief_matches: VerifiedProgramRecord[];
   } | null>(null);
+  const [allPrograms, setAllPrograms] = useState<VerifiedProgramRecord[]>([]);
+  const [directorySearch, setDirectorySearch] = useState<string>('');
+  const [directoryCategory, setDirectoryCategory] =
+    useState<DirectoryCategoryFilter>('ALL');
+  const [directoryCity, setDirectoryCity] = useState<string>('All');
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('split_copilot');
   const [enableThinking, setEnableThinking] = useState<boolean>(false);
   const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
@@ -46,6 +61,15 @@ export function App() {
       .then((data) => {
         setSession(data.session);
         setDdl(data.ddl);
+      })
+      .catch(console.error);
+
+    fetch('/api/programs')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.programs)) {
+          setAllPrograms(data.programs);
+        }
       })
       .catch(console.error);
 
@@ -412,70 +436,213 @@ export function App() {
 
         {deviceMode === 'architecture_ddl' && (
           <div className="space-y-6">
-            <div className="clinical-card border border-[#cfe8e3] rounded-3xl p-6 space-y-3">
-              <h3 className="text-base font-bold text-[#14343d]">
-                All Verified Community Programs &amp; Practical Supports
-              </h3>
-              <p className="text-xs text-[#4b6a73]">
-                Every program listed below is checked directly with local coordinators so you know what is open and what support is included.
-              </p>
+            <div className="clinical-card border border-[#cfe8e3] rounded-3xl p-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-[#14343d]">
+                    All Verified Community Programs, Options+, Sources BC, Schools &amp; Local Food Banks
+                  </h3>
+                  <p className="text-xs text-[#4b6a73] mt-0.5">
+                    Search across every Lower Mainland city and save any program or local food bank directly to your Pocket Phone Card.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-[#4a656d]">Filter City:</span>
+                  <select
+                    value={directoryCity}
+                    onChange={(e) => setDirectoryCity(e.target.value)}
+                    className="bg-[#f7f4ed] border border-[#dcd4c4] rounded-xl px-3 py-1.5 text-xs font-semibold text-[#163038] cursor-pointer focus:outline-none focus:border-[#2a9d8f]"
+                  >
+                    <option value="All">All Lower Mainland Cities</option>
+                    <option value="Surrey">Surrey (Whalley, Newton, Guildford, Cloverdale)</option>
+                    <option value="White Rock / South Surrey">White Rock / South Surrey</option>
+                    <option value="Langley">Langley</option>
+                    <option value="Delta">Delta</option>
+                    <option value="Burnaby">Burnaby</option>
+                    <option value="New Westminster">New Westminster</option>
+                    <option value="Coquitlam">Coquitlam / Tri-Cities</option>
+                    <option value="Vancouver">Vancouver</option>
+                    <option value="Richmond">Richmond</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Directory Search & Partner Filter Bar */}
+              <div className="linen-card border border-[#e3dccf] rounded-2xl p-3.5 space-y-2.5">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-[#547078] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={directorySearch}
+                    onChange={(e) => setDirectorySearch(e.target.value)}
+                    placeholder="Search Options+, Sources BC, KPU, BCIT, VCC, Douglas, Surrey Food Bank, Cloverdale Kitchen, boots, transit..."
+                    className="w-full bg-white border border-[#dcd4c4] rounded-xl pl-9 pr-8 py-2 text-xs text-[#163038] placeholder:text-[#6c858d] focus:outline-none focus:border-[#2a9d8f]"
+                  />
+                  {directorySearch && (
+                    <button
+                      type="button"
+                      onClick={() => setDirectorySearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#547078] hover:text-[#163038] cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(
+                    [
+                      { id: 'ALL', label: 'All Programs & Food Banks' },
+                      { id: 'OPTIONS_PLUS', label: 'Options+ (Options Community Services)' },
+                      { id: 'SOURCES_BC', label: 'Sources BC' },
+                      { id: 'SCHOOLS', label: 'Schools & Colleges (KPU, BCIT, VCC, Douglas, SD36)' },
+                      { id: 'FOOD_BANKS', label: 'Local Food Banks & Hot Meals' },
+                      { id: 'HANDS_ON', label: 'Hands-On Work & Trades' }
+                    ] as Array<{ id: DirectoryCategoryFilter; label: string }>
+                  ).map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setDirectoryCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                        directoryCategory === cat.id
+                          ? 'ocean-btn text-white shadow-2xs'
+                          : 'bg-white text-[#35565f] hover:bg-[#e6f6f3] border border-[#dcd4c4]'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-[#e2d6c1] bg-[#f8f2e7] text-[#45636b] font-semibold">
                       <th className="py-3 px-3.5 rounded-tl-xl">Program &amp; Community Partner</th>
-                      <th className="py-3 px-3.5">City</th>
-                      <th className="py-3 px-3.5">How to Join</th>
-                      <th className="py-3 px-3.5">Hands-On Learning</th>
-                      <th className="py-3 px-3.5">No Written Test</th>
-                      <th className="py-3 px-3.5">No ID Needed to Start</th>
-                      <th className="py-3 px-3.5 rounded-tr-xl">Free Support Included</th>
+                      <th className="py-3 px-3.5">City / Transit</th>
+                      <th className="py-3 px-3.5">Contact Person</th>
+                      <th className="py-3 px-3.5">Hands-On / No Exam</th>
+                      <th className="py-3 px-3.5">Free Support Included</th>
+                      <th className="py-3 px-3.5 rounded-tr-xl text-right">Save to Phone</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#ebe1d1]">
-                    {[...ddl.immediate_relief_matches, ...ddl.primary_matches].map((p) => (
-                      <tr key={p.program_id} className="hover:bg-[#eef9f7] transition-colors">
-                        <td className="py-3 px-3.5">
-                          <div className="font-bold text-[#14343d]">{p.program_name}</div>
-                          <div className="text-[#56737b]">{p.organization_name}</div>
-                        </td>
-                        <td className="py-3 px-3.5 font-medium text-[#28505a]">{p.municipality}</td>
-                        <td className="py-3 px-3.5 text-[#1f6a8f] font-medium">
-                          {p.intake_type.replace('_', ' ')}
-                        </td>
-                        <td className="py-3 px-3.5">
-                          {p.supports_high_skill_low_text ? (
-                            <span className="text-[#16796d] font-semibold">✓ Yes</span>
-                          ) : (
-                            <span className="text-[#789098]">Reading/List Based</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3.5">
-                          {p.offers_oral_or_practical_testing ? (
-                            <span className="text-[#1f6a8f] font-semibold">✓ Practical / Spoken</span>
-                          ) : (
-                            <span className="text-[#789098]">Standard</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3.5">
-                          {!p.requires_government_id ? (
-                            <span className="text-[#16796d] font-semibold">✓ Start Right Away</span>
-                          ) : (
-                            <span className="text-[#b86b52]">ID Needed</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-3.5 text-[#35535b]">
-                          {[
-                            p.provides_transit_tickets && 'Bus Tickets',
-                            p.provides_food_or_meals && 'Free Meals',
-                            p.provides_living_stipend && 'Training Pay',
-                            p.provides_gear_or_boots && 'Work Boots/Gear'
-                          ]
-                            .filter(Boolean)
-                            .join(' • ')}
-                        </td>
-                      </tr>
-                    ))}
+                    {(allPrograms.length > 0
+                      ? allPrograms
+                      : [...ddl.immediate_relief_matches, ...ddl.primary_matches]
+                    )
+                      .filter((p) => {
+                        if (directoryCity !== 'All' && p.municipality !== directoryCity) {
+                          return false;
+                        }
+                        const hay = [
+                          p.program_name,
+                          p.organization_name,
+                          p.municipality,
+                          p.street_address,
+                          p.highlight_note,
+                          ...(p.hobby_tags || [])
+                        ]
+                          .join(' ')
+                          .toLowerCase();
+                        if (directorySearch.trim() && !hay.includes(directorySearch.trim().toLowerCase())) {
+                          return false;
+                        }
+                        if (directoryCategory === 'OPTIONS_PLUS') return hay.includes('options');
+                        if (directoryCategory === 'SOURCES_BC') return hay.includes('sources');
+                        if (directoryCategory === 'SCHOOLS') {
+                          return (
+                            hay.includes('kpu') ||
+                            hay.includes('bcit') ||
+                            hay.includes('vcc') ||
+                            hay.includes('douglas') ||
+                            hay.includes('surrey schools') ||
+                            hay.includes('school') ||
+                            hay.includes('college')
+                          );
+                        }
+                        if (directoryCategory === 'FOOD_BANKS') {
+                          return (
+                            p.category === 'Survival_Relief' ||
+                            p.category === 'Culinary_Hospitality' ||
+                            hay.includes('food') ||
+                            hay.includes('meal') ||
+                            hay.includes('kitchen')
+                          );
+                        }
+                        if (directoryCategory === 'HANDS_ON') {
+                          return p.category !== 'Survival_Relief' && p.supports_high_skill_low_text;
+                        }
+                        return true;
+                      })
+                      .map((p) => {
+                        const isSavedMain = session.pinned_program_id === p.program_id;
+                        const isSavedRelief = session.pinned_relief_program_id === p.program_id;
+                        const isSaved = isSavedMain || isSavedRelief;
+                        return (
+                          <tr key={p.program_id} className="hover:bg-[#eef9f7] transition-colors">
+                            <td className="py-3 px-3.5 max-w-md">
+                              <div className="font-bold text-[#14343d]">{p.program_name}</div>
+                              <div className="text-[#1b7a6e] font-medium">{p.organization_name}</div>
+                              <div className="text-[11px] text-[#56737b] mt-0.5">{p.highlight_note}</div>
+                            </td>
+                            <td className="py-3 px-3.5">
+                              <div className="font-bold text-[#28505a]">{p.municipality}</div>
+                              <div className="text-[11px] text-[#4b6a73]">{p.nearest_transit_stop}</div>
+                            </td>
+                            <td className="py-3 px-3.5">
+                              <div className="font-semibold text-[#1f6a8f]">{p.contact_lead_name}</div>
+                              <div className="text-[11px] text-[#4b6a73]">{p.contact_phone_or_email}</div>
+                            </td>
+                            <td className="py-3 px-3.5">
+                              <div className="text-[#16796d] font-semibold">
+                                {p.supports_high_skill_low_text ? '✓ 100% Hands-On' : '✓ Calm Checklists'}
+                              </div>
+                              <div className="text-[11px] text-[#1f6a8f]">
+                                {p.offers_oral_or_practical_testing ? '✓ No Written Test' : 'Standard'} •{' '}
+                                {!p.requires_government_id ? 'No ID Needed' : 'ID Needed'}
+                              </div>
+                            </td>
+                            <td className="py-3 px-3.5 text-[#35535b]">
+                              {[
+                                p.provides_transit_tickets && 'Bus Tickets',
+                                p.provides_food_or_meals && 'Food / Hot Meals',
+                                p.provides_living_stipend && 'Training Pay',
+                                p.provides_gear_or_boots && 'Work Boots/Gear'
+                              ]
+                                .filter(Boolean)
+                                .join(' • ')}
+                            </td>
+                            <td className="py-3 px-3.5 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (p.category === 'Survival_Relief') {
+                                    handlePatchSession({
+                                      pinned_relief_program_id: p.program_id
+                                    });
+                                  } else {
+                                    handlePatchSession({
+                                      pinned_program_id: p.program_id,
+                                      next_micro_step_text: `Call ${p.contact_lead_name} (${p.contact_phone_or_email}) together for a friendly intro.`
+                                    });
+                                  }
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition-all ${
+                                  isSaved
+                                    ? 'bg-[#2a9d8f] text-white'
+                                    : 'bg-white hover:bg-[#e6f6f3] text-[#1b7a6e] border border-[#bce5dd]'
+                                }`}
+                              >
+                                <Pin className="w-3.5 h-3.5" />
+                                {isSaved ? '✓ Saved' : 'Save to Phone'}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>
