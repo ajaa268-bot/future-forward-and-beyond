@@ -1,0 +1,33 @@
+{
+  "name": "future-forward-and-beyond",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Future Forward and Beyond — Multi-Barrier Navigator & Dual-Axis Co-Pilot Workbook",
+  "scripts": {
+    "dev": "node ./node_modules/vite/bin/vite.js --port 5185",
+    "server": "node ./node_modules/tsx/dist/cli.mjs server/index.ts",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "start": "node ./node_modules/tsx/dist/cli.mjs server/index.ts"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.7",
+    "@vitejs/plugin-react": "^4.4.1",
+    "express": "^5.1.0",
+    "lucide-react": "^0.511.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.7",
+    "tsx": "^4.19.4",
+    "vite": "^6.3.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.18",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.4",
+    "typescript": "^5.8.3"
+  }
+}

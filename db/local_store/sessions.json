@@ -1,0 +1,124 @@
+[
+  {
+    "session_id": "A842",
+    "client_alias": "Stratus",
+    "coordinator_id": "Marcus V. (Lead Co-Pilot)",
+    "municipality": "Surrey",
+    "problem_solving_complexity": 4,
+    "text_admin_tolerance": 1,
+    "preferred_learning_modality": "Kinesthetic_HandsOn",
+    "autonomy_preference": "Independent_Problem_Solver",
+    "current_readiness_tier": 2,
+    "troubleshooter_selections": {
+      "scenario_id": "kitchen_rush",
+      "selected_node_id": "isolate_burner",
+      "solving_style": "Root-Cause Isolation"
+    },
+    "spec_sheet_state": {
+      "input_channel": "Kinesthetic_HandsOn",
+      "crew_slider": 30,
+      "structure_slider": 80,
+      "bottlenecks": [
+        "Heavy Reading / Spelling Forms",
+        "Sitting Still at a Desk"
+      ]
+    },
+    "voice_transcript": "Fixed a dead channel on a stage mixer and ran a 60-plate kitchen rush",
+    "skill_blueprint_json": {
+      "headline_strength": "Systems Troubleshooter & Hands-On Specialist (Quadrant A)",
+      "extracted_pro_skills": [
+        {
+          "what_you_did": "Managed high-volume cooking / prep line and isolated equipment bottlenecks under time pressure",
+          "pro_translation": "Commercial Line Pacing, Thermal Triage & FoodSafe Prep Logistics",
+          "noc_domain": "NOC 63200 — Cooks & Commercial Kitchen Operations"
+        },
+        {
+          "what_you_did": "Traced dead signal paths, modded/repaired PC hardware, or troubleshot live audio gear",
+          "pro_translation": "Root-Cause Signal Flow Isolation & Hardware Bench Diagnostics",
+          "noc_domain": "NOC 22221 / 52119 — Hardware & Audio-Visual Systems Tech"
+        },
+        {
+          "what_you_did": "Disassembled mechanical assemblies, isolated worn tolerances, and rebuilt working hardware",
+          "pro_translation": "Mechanical Fault Isolation, Tool Fluency & Spatial Assembly",
+          "noc_domain": "NOC 72400 / 74204 — Millwright, Fabrication & Mechanical Trades"
+        }
+      ],
+      "coordinator_private_notes": "Client demonstrates strong root-cause isolation and practical systems logic (4/5), independently decoupled from text/form tolerance (1/5). Avoid text-heavy online portals or written entrance exams. Route to hands-on shop floor, culinary lab, or makerspace with oral/practical assessment. Coordinator should act as scribe for 1-page intake."
+    },
+    "completed_modules_json": [
+      "TROUBLESHOOTER",
+      "SPEC_SHEET",
+      "VOICE_BLUEPRINT",
+      "PRESSURE_VALVE"
+    ],
+    "extracted_likes_tags": [
+      "Commercial Cooking / Line Pacing",
+      "Hardware & PC Diagnostics",
+      "Live Audio / Signal Rigging"
+    ],
+    "extracted_dislikes_tags": [
+      "Heavy Reading / Spelling Forms",
+      "Call Centre / Desk Cubicle"
+    ],
+    "active_barriers": [
+      "Transit Pass / Compass",
+      "Paperwork / Scribe Help"
+    ],
+    "loadout_cards": [
+      {
+        "id": "card-culinary",
+        "title": "Commercial Kitchen & Prep Lab",
+        "category": "Culinary_Hospitality",
+        "icon": "Flame",
+        "status": "Lock It In",
+        "tagline": "Fast-paced hands-on cooking, zero desk work"
+      },
+      {
+        "id": "card-hardware",
+        "title": "PC / Server & Audio Hardware Bench",
+        "category": "Tech_Media_Lab",
+        "icon": "Cpu",
+        "status": "Lock It In",
+        "tagline": "Tear down rigs, trace circuits, fix real gear"
+      },
+      {
+        "id": "card-trades",
+        "title": "Millwright & Metal Fabrication Bay",
+        "category": "Trades_Apprenticeship",
+        "icon": "Wrench",
+        "status": "Test Run",
+        "tagline": "Heavy tools, welding, mechanical assembly"
+      },
+      {
+        "id": "card-stage",
+        "title": "Live Concert & Stagehand Rigging",
+        "category": "Tech_Media_Lab",
+        "icon": "Speaker",
+        "status": "Test Run",
+        "tagline": "Set up sound, truss, and lighting for shows"
+      },
+      {
+        "id": "card-hort",
+        "title": "Urban Forestry & Park Trail Crew",
+        "category": "Bridge_Training",
+        "icon": "Trees",
+        "status": "Test Run",
+        "tagline": "Outdoor physical crew, chainsaws, nursery care"
+      },
+      {
+        "id": "card-desk",
+        "title": "Office Data Entry & Paperwork",
+        "category": "Employment_Placement",
+        "icon": "FileText",
+        "status": "Scrap It",
+        "tagline": "Spreadsheets, typing forms, sitting indoors"
+      }
+    ],
+    "pinned_program_id": "prog-surrey-culinary-01",
+    "pinned_relief_program_id": "prog-surrey-relief-04",
+    "next_micro_step_text": "Warm Handoff to Sarah Jenkins (Kitchen Lead) (604-584-5811 / culinary-bridge@options.bc.ca) at Community Culinary & FoodSafe Bridge Cohort",
+    "coordinator_scribe_required": true,
+    "active_module_on_canvas": "TROUBLESHOOTER",
+    "updated_at": "2026-10-26T19:52:40.733Z"
+  }
+]
