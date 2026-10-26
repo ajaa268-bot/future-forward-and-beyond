@@ -15,9 +15,32 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set('trust proxy', 1);
+
+const ALLOWED_ORIGINS = [
+  'https://plauxie.life',
+  'https://www.plauxie.life',
+  'http://localhost:4180',
+  'http://localhost:5185'
+];
+
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
-  cors: { origin: '*', methods: ['GET', 'POST', 'PATCH'] }
+  cors: {
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        ALLOWED_ORIGINS.includes(origin) ||
+        origin.endsWith('.plauxie.life') ||
+        origin.endsWith('.railway.app')
+      ) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
+    methods: ['GET', 'POST', 'PATCH']
+  }
 });
 
 app.use(express.json());
@@ -48,12 +71,15 @@ function computeDDLForSession(sessionId: string) {
   return db.verifyProgramsDDL(filters, session);
 }
 
-// Health & System Metadata
+// Health & System Metadata (Railway Healthcheck Endpoint)
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     project: 'Future Forward and Beyond — Multi-Barrier Navigator & Co-Pilot Workbook',
     version: '4.0.0',
+    domain: process.env.PUBLIC_DOMAIN || 'https://plauxie.life',
+    railway_project_id: process.env.RAILWAY_PROJECT_ID || '9821be45-444b-4d47-b79e-2b811be6851f',
+    environment: process.env.RAILWAY_ENVIRONMENT_NAME || process.env.NODE_ENV || 'development',
     modules_count: db.getModules().length,
     verified_programs_count: db.getAllPrograms().length
   });

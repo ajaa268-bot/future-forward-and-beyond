@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+npm-debug.log
+.npmrc
+.git
+.gitignore
+.env
+.env.*
+.vscode
+.idea
+dist
+coverage
+.DS_Store
+*.log
+db/local_store/llm_endpoint_state.json

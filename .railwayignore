@@ -1,0 +1,10 @@
+node_modules/
+**/node_modules/
+.npmrc
+.git/
+.env
+.env.*
+dist/
+*.log
+.DS_Store
+db/local_store/llm_endpoint_state.json

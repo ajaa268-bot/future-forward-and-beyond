@@ -5,7 +5,16 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    host: true,
     port: 5185,
+    allowedHosts: [
+      'plauxie.life',
+      'www.plauxie.life',
+      '.plauxie.life',
+      '.railway.app',
+      'localhost',
+      '127.0.0.1'
+    ],
     proxy: {
       '/api': 'http://localhost:4180',
       '/socket.io': {
@@ -13,5 +22,14 @@ export default defineConfig({
         ws: true
       }
     }
+  },
+  preview: {
+    host: true,
+    allowedHosts: [
+      'plauxie.life',
+      'www.plauxie.life',
+      '.plauxie.life',
+      '.railway.app'
+    ]
   }
 });

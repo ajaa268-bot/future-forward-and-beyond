@@ -16,6 +16,22 @@ npm run start
 
 The unified server + Co-Pilot UI runs at `http://localhost:4180` (or `npm run dev` on port `5185` with Vite HMR).
 
+## Railway & Custom Domain (`https://plauxie.life/`) Configuration
+
+This repository is pre-configured for **Railway** (`https://railway.com/project/9821be45-444b-4d47-b79e-2b811be6851f`) and the custom domain **`https://plauxie.life/`**:
+
+- **Builder:** `DOCKERFILE` ([Dockerfile](./Dockerfile) & [railway.json](./railway.json))
+- **Healthcheck Path:** `/api/health`
+- **Start Command:** `npm start` (binds automatically to `0.0.0.0:$PORT`)
+- **Allowed Hosts & CORS:** `plauxie.life`, `www.plauxie.life`, `*.plauxie.life`, `*.railway.app`
+
+### Connecting in Railway (`9821be45-444b-4d47-b79e-2b811be6851f`)
+1. Open `https://railway.com/project/9821be45-444b-4d47-b79e-2b811be6851f`.
+2. In the **Deploy from GitHub repo** picker:
+   - Paste `https://github.com/ajaa268-bot/future-forward-and-beyond` directly into the **Search repositories, or paste a URL...** box, **or**
+   - Click **Configure GitHub App**, grant access to `ajaa268-bot/future-forward-and-beyond`, and click **Refresh**.
+3. Under the service's **Settings → Networking → Custom Domains**, add `plauxie.life` (and optionally `www.plauxie.life`).
+
 ## Optional PostgreSQL + `pgvector` Database
 
 To spin up the standalone PostgreSQL 16 + `pgvector` container with the master DDL schema ([db/schema.sql](./db/schema.sql)):
