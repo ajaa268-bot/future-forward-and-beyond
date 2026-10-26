@@ -184,13 +184,13 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
-      {/* Module Selector Ribbon (Coordinator Drop-In Drawer) */}
-      <div className="bg-slate-950/90 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+    <div className="clinical-card border border-[#dfe6dd] rounded-2xl overflow-hidden">
+      {/* Module Selector Ribbon (Practitioner Drop-In Drawer) */}
+      <div className="linen-card border-b border-[#e4ddd0] px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Radio className="w-4 h-4 text-amber-400 animate-pulse" />
-          <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
-            COORDINATOR DROP-IN DRAWER (ZERO-SPELLING STUDIO MODULES)
+          <Radio className="w-4 h-4 text-[#2a9d8f]" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#46636b]">
+            Interactive Assessment Modules (Zero-Spelling Guided Suite)
           </span>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -211,16 +211,16 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                 onClick={() =>
                   onPatchSession({ active_module_on_canvas: tab.code })
                 }
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-bold'
-                    : 'bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                    ? 'bg-[#2a9d8f] text-white shadow-sm font-semibold'
+                    : 'bg-white/90 text-[#3c5a63] hover:bg-[#eaf7f4] border border-[#dfd8ca]'
                 }`}
               >
                 {isDone && (
                   <CheckCircle2
                     className={`w-3.5 h-3.5 ${
-                      isActive ? 'text-slate-950' : 'text-emerald-400'
+                      isActive ? 'text-white' : 'text-[#2a9d8f]'
                     }`}
                   />
                 )}
@@ -233,25 +233,27 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
       {/* MODULE 1: THE TROUBLESHOOTER */}
       {activeModule === 'TROUBLESHOOTER' && (
-        <div className="p-5 space-y-5">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div className="p-6 space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
-              <div className="text-xs font-mono text-amber-400 uppercase tracking-widest">
-                MODULE 01 // VISUAL SCENARIO DIAGNOSTICS (NO TYPING OR SPELLING)
+              <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
+                Module 01 • Visual Scenario Diagnostics (Zero Typing or Spelling)
               </div>
-              <h3 className="text-lg font-bold text-white mt-0.5">
-                The Troubleshooter — How You Isolate Bottlenecks Under Pressure
+              <h3 className="text-lg font-bold text-[#163038] mt-0.5">
+                The Troubleshooter — Practical Problem-Solving &amp; Triage
               </h3>
-              <p className="text-sm text-slate-400 mt-1">
-                Tap a real-world shop or kitchen bottleneck below and choose your first move. Evaluates{' '}
-                <code className="text-amber-300 font-mono">problem_solving_complexity (1–5)</code>{' '}
-                completely independently from reading/form tolerance.
+              <p className="text-sm text-[#547078] mt-1">
+                Select a real-world scenario below and tap your first instinct. Evaluates{' '}
+                <code className="text-[#1f6e8c] bg-[#e9f4f9] px-1.5 py-0.5 rounded font-mono text-xs">
+                  problem_solving_complexity (1–5)
+                </code>{' '}
+                independently from reading or paperwork tolerance.
               </p>
             </div>
-            <div className="bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-right">
-              <div className="text-[11px] font-mono text-slate-400 uppercase">Detected Triage Style</div>
-              <div className="text-sm font-mono font-bold text-emerald-400">
-                {session.troubleshooter_selections.solving_style} (IQ: {session.problem_solving_complexity}/5)
+            <div className="bg-[#eaf7f4] border border-[#bce5dd] rounded-xl px-4 py-2.5 text-right">
+              <div className="text-[11px] font-medium text-[#3b6e67] uppercase">Detected Triage Approach</div>
+              <div className="text-sm font-bold text-[#155e54]">
+                {session.troubleshooter_selections.solving_style} (Tier {session.problem_solving_complexity}/5)
               </div>
             </div>
           </div>
@@ -263,27 +265,27 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
               return (
                 <div
                   key={scen.id}
-                  className={`rounded-xl border p-4 transition-all flex flex-col justify-between ${
+                  className={`rounded-2xl border p-4 transition-all flex flex-col justify-between ${
                     isSelectedScenario
-                      ? 'bg-slate-950/90 border-amber-500/70 shadow-lg shadow-amber-500/10'
-                      : 'bg-slate-950/40 border-slate-800/80 hover:border-slate-700'
+                      ? 'bg-[#f4fbf9] border-[#2a9d8f] shadow-md shadow-[#2a9d8f]/10'
+                      : 'linen-card border-[#e3dccf] hover:border-[#b5dfd7]'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#e8f3f9] text-[#23638a] border border-[#c3dff0]">
                         {scen.badge}
                       </span>
                       <button
                         onClick={() => speakPrompt(`${scen.title}. ${scen.subtitle}`)}
                         title="Tap to Read Aloud"
-                        className="text-slate-400 hover:text-amber-400 p-1 rounded cursor-pointer"
+                        className="text-[#56747d] hover:text-[#2a9d8f] p-1 rounded-lg hover:bg-white/80 cursor-pointer transition-colors"
                       >
                         <Volume2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <h4 className="font-bold text-sm text-slate-100">{scen.title}</h4>
-                    <p className="text-xs text-slate-400 mt-1 mb-3 leading-relaxed">
+                    <h4 className="font-bold text-sm text-[#163038]">{scen.title}</h4>
+                    <p className="text-xs text-[#547078] mt-1 mb-3.5 leading-relaxed">
                       {scen.subtitle}
                     </p>
                   </div>
@@ -307,19 +309,21 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                               completed_modules_json: markModuleCompleted('TROUBLESHOOTER')
                             })
                           }
-                          className={`w-full text-left p-2.5 rounded-lg border text-xs transition-all cursor-pointer ${
+                          className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
                             activeNode
-                              ? 'bg-emerald-500/20 border-emerald-400 text-white font-medium'
-                              : 'bg-slate-900/90 border-slate-800 text-slate-300 hover:border-slate-700'
+                              ? 'bg-[#2a9d8f] border-[#1f7a6e] text-white font-medium shadow-xs'
+                              : 'bg-white border-[#e2dcd0] text-[#28454e] hover:border-[#2a9d8f]/60 hover:bg-[#f8fcfb]'
                           }`}
                         >
-                          <div className="flex items-center justify-between text-[10px] font-mono uppercase mb-1">
-                            <span className={activeNode ? 'text-emerald-300' : 'text-amber-400/90'}>
-                              [{node.style}]
+                          <div className="flex items-center justify-between text-[10px] font-semibold uppercase mb-1">
+                            <span className={activeNode ? 'text-[#d8f7f2]' : 'text-[#2a9d8f]'}>
+                              {node.style}
                             </span>
-                            <span className="text-slate-400">Complexity {node.iq}/5</span>
+                            <span className={activeNode ? 'text-white/90' : 'text-[#647f87]'}>
+                              Complexity {node.iq}/5
+                            </span>
                           </div>
-                          <div>{node.label}</div>
+                          <div className="leading-snug">{node.label}</div>
                         </button>
                       );
                     })}
@@ -333,32 +337,35 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
       {/* MODULE 2: SYSTEM SPEC SHEET */}
       {activeModule === 'SPEC_SHEET' && (
-        <div className="p-5 space-y-6">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div className="p-6 space-y-6">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
-              <div className="text-xs font-mono text-amber-400 uppercase tracking-widest">
-                MODULE 02 // EQUALIZER RIG TUNING (REPLACES INVASIVE LITERACY EXAMS)
+              <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
+                Module 02 • Cognitive &amp; Sensory Comfort Profile
               </div>
-              <h3 className="text-lg font-bold text-white mt-0.5">
-                System Spec Sheet — Tune How Your Brain Runs Best
+              <h3 className="text-lg font-bold text-[#163038] mt-0.5">
+                System Spec Sheet — How Your Mind Works Most Comfortably
               </h3>
-              <p className="text-sm text-slate-400 mt-1">
-                Configure your learning channel, crew autonomy, and system bottlenecks. Automatically sets{' '}
-                <code className="text-amber-300 font-mono">text_admin_tolerance</code> and oral exam accommodations.
+              <p className="text-sm text-[#547078] mt-1">
+                Tune your preferred learning channel, collaborative pace, and environmental comfort. Automatically configures{' '}
+                <code className="text-[#1f6e8c] bg-[#e9f4f9] px-1.5 py-0.5 rounded font-mono text-xs">
+                  text_admin_tolerance
+                </code>{' '}
+                and practical testing accommodations.
               </p>
             </div>
-            <div className="bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-right font-mono">
-              <div className="text-[11px] text-slate-400">TEXT / FORM TOLERANCE</div>
-              <div className="text-sm font-bold text-amber-400">
-                Score: {session.text_admin_tolerance}/5 | Modality: {session.preferred_learning_modality}
+            <div className="bg-[#e8f3f9] border border-[#c0dfef] rounded-xl px-4 py-2.5 text-right">
+              <div className="text-[11px] font-medium text-[#2c678a] uppercase">Reading / Form Comfort</div>
+              <div className="text-sm font-bold text-[#194c6b]">
+                Score: {session.text_admin_tolerance}/5 • {session.preferred_learning_modality.replace('_', ' ')}
               </div>
             </div>
           </div>
 
           {/* 1. Input Channel */}
           <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-2.5">
-              1. INPUT CHANNEL (HOW YOU TAKE IN INFO FASTEST):
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#3d5b63] mb-2.5">
+              1. Input Channel (How You Absorb New Skills Fastest):
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {(
@@ -366,7 +373,7 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                   {
                     id: 'Kinesthetic_HandsOn',
                     label: 'Hands-On / Watch & Do',
-                    sub: 'Shop floor demonstration',
+                    sub: 'Practical demonstration',
                     icon: Wrench
                   },
                   {
@@ -384,7 +391,7 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                   {
                     id: 'Text_Manual',
                     label: 'Written Manual / Text',
-                    sub: 'Checklists & specs',
+                    sub: 'Checklists & guides',
                     icon: FileText
                   }
                 ] as Array<{
@@ -411,19 +418,19 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                         completed_modules_json: markModuleCompleted('SPEC_SHEET')
                       });
                     }}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                       selected
-                        ? 'bg-amber-500/20 border-amber-400 text-white shadow-md'
-                        : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                        ? 'bg-[#e6f6f3] border-[#2a9d8f] text-[#154d46] shadow-xs'
+                        : 'linen-card border-[#e3dccf] text-[#35525a] hover:border-[#9fd6cc] hover:bg-white'
                     }`}
                   >
                     <Icon
                       className={`w-5 h-5 mb-2 ${
-                        selected ? 'text-amber-400' : 'text-slate-400'
+                        selected ? 'text-[#1f7a6e]' : 'text-[#5b7880]'
                       }`}
                     />
                     <div className="text-xs font-bold">{ch.label}</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">{ch.sub}</div>
+                    <div className="text-[11px] text-[#5e7a82] mt-0.5">{ch.sub}</div>
                   </button>
                 );
               })}
@@ -431,12 +438,12 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
           </div>
 
           {/* 2. Operating Mode Sliders */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/70 border border-slate-800 rounded-xl p-4">
-            <div>
-              <div className="flex justify-between text-xs font-mono text-slate-300 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 linen-card border border-[#e3dccf] rounded-2xl p-4">
+            <div className="bg-white/80 rounded-xl p-3.5 border border-[#eae3d5]">
+              <div className="flex justify-between text-xs font-semibold text-[#35525a] mb-2">
                 <span>SOLO DEEP-FOCUS</span>
-                <span className="text-amber-400">{session.spec_sheet_state.crew_slider}%</span>
-                <span>SMALL TIGHT CREW</span>
+                <span className="text-[#2a9d8f] font-bold">{session.spec_sheet_state.crew_slider}%</span>
+                <span>SMALL SUPPORTIVE CREW</span>
               </div>
               <input
                 type="range"
@@ -454,15 +461,15 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                     }
                   });
                 }}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[#2a9d8f] cursor-pointer"
               />
             </div>
 
-            <div>
-              <div className="flex justify-between text-xs font-mono text-slate-300 mb-2">
-                <span>STEP-BY-STEP CHECKLIST</span>
-                <span className="text-emerald-400">{session.spec_sheet_state.structure_slider}%</span>
-                <span>GIVE ME THE END GOAL & LET ME BUILD</span>
+            <div className="bg-white/80 rounded-xl p-3.5 border border-[#eae3d5]">
+              <div className="flex justify-between text-xs font-semibold text-[#35525a] mb-2">
+                <span>CLEAR STEP CHECKLIST</span>
+                <span className="text-[#2c6e9b] font-bold">{session.spec_sheet_state.structure_slider}%</span>
+                <span>SHOW END GOAL &amp; LET ME BUILD</span>
               </div>
               <input
                 type="range"
@@ -480,15 +487,15 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                     }
                   });
                 }}
-                className="w-full accent-emerald-500 cursor-pointer"
+                className="w-full accent-[#2c6e9b] cursor-pointer"
               />
             </div>
           </div>
 
           {/* 3. System Bottlenecks */}
           <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-2.5">
-              3. SYSTEM BOTTLENECKS (WHAT DRAINS YOUR BATTERY — TAP TO FLAG):
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#3d5b63] mb-2.5">
+              3. Friction Points (What Drains Your Energy — Tap to Accommodate):
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
@@ -516,14 +523,14 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                         completed_modules_json: markModuleCompleted('SPEC_SHEET')
                       });
                     }}
-                    className={`p-3 rounded-lg border text-xs font-medium text-left transition-all cursor-pointer flex items-center justify-between ${
+                    className={`p-3.5 rounded-xl border text-xs font-medium text-left transition-all cursor-pointer flex items-center justify-between ${
                       active
-                        ? 'bg-rose-500/20 border-rose-500/70 text-rose-200'
-                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-[#e8f3f9] border-[#5aa3cc] text-[#184a69] shadow-xs font-semibold'
+                        : 'bg-white border-[#e3dccf] text-[#4c6770] hover:border-[#b5dfd7]'
                     }`}
                   >
                     <span>{bottleneck}</span>
-                    {active && <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />}
+                    {active && <CheckCircle2 className="w-4 h-4 text-[#2c6e9b] shrink-0" />}
                   </button>
                 );
               })}
@@ -534,16 +541,16 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
       {/* MODULE 3: VOICE-TO-BLUEPRINT */}
       {activeModule === 'VOICE_BLUEPRINT' && (
-        <div className="p-5 space-y-5">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div className="p-6 space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
-              <div className="text-xs font-mono text-amber-400 uppercase tracking-widest">
-                MODULE 03 // SPOKEN SKILL EXTRACTOR (WHISPER STT + DUAL-AXIS LLM SYNTHESIZER)
+              <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
+                Module 03 • Spoken Skill Extractor (Whisper STT + Dual-Axis Synthesizer)
               </div>
-              <h3 className="text-lg font-bold text-white mt-0.5">
-                Voice-to-Blueprint — Talk For 60 Seconds, Get Your Technical Blueprint
+              <h3 className="text-lg font-bold text-[#163038] mt-0.5">
+                Voice-to-Blueprint — Share a Story, See Your Professional Strengths
               </h3>
-              <p className="text-sm text-slate-400 mt-1 italic">
+              <p className="text-sm text-[#547078] mt-1 italic">
                 &ldquo;Tell me about something you&apos;ve fixed, cooked, built, modded, or organized that came out right. Don&apos;t worry about formal words—just walk me through how you did it.&rdquo;
               </p>
             </div>
@@ -553,7 +560,7 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                   "Tell me about something you've fixed, cooked, built, modded, or organized that came out right. Don't worry about formal words, just walk me through how you did it."
                 )
               }
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-amber-300 flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-[#e8f3f9] hover:bg-[#d8eaf5] border border-[#bddbf0] text-xs font-medium text-[#1c5678] flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <Volume2 className="w-4 h-4" /> Read Prompt Aloud
             </button>
@@ -561,10 +568,10 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
           {/* Preset Story Buttons for Instant Demo Testing */}
           <div>
-            <div className="text-xs font-mono text-slate-400 uppercase mb-2">
-              Load Spoken Audio Transcript Sample (or speak/paste below):
+            <div className="text-xs font-semibold text-[#48656e] uppercase mb-2">
+              Select a Sample Client Narrative (or speak/type below):
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {VOICE_PRESETS.map((preset, idx) => (
                 <button
                   key={idx}
@@ -572,72 +579,72 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                     onPatchSession({ voice_transcript: preset.text });
                     onSynthesizeVoice(preset.text);
                   }}
-                  className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500/60 text-left text-xs text-slate-300 transition-all cursor-pointer"
+                  className="p-3.5 rounded-2xl linen-card border border-[#e2d9c8] hover:border-[#2a9d8f] hover:bg-white text-left text-xs text-[#37535b] transition-all cursor-pointer"
                 >
-                  <div className="font-mono text-[11px] text-amber-400 font-bold mb-1">
+                  <div className="text-[11px] text-[#1b7a6e] font-bold mb-1">
                     {preset.label}
                   </div>
-                  <div className="line-clamp-2 text-slate-400">{preset.text}</div>
+                  <div className="line-clamp-2 text-[#5a757d] leading-relaxed">{preset.text}</div>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono uppercase text-emerald-400 flex items-center gap-1.5">
-                <Mic className="w-4 h-4" /> Captured Voice Transcript (Zero-Spelling Required)
+          <div className="linen-card border border-[#e2d9c8] rounded-2xl p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase text-[#1b7a6e] flex items-center gap-1.5">
+                <Mic className="w-4 h-4" /> Captured Spoken Narrative (Zero Spelling Required)
               </span>
               <button
                 disabled={isSynthesizing}
                 onClick={() => onSynthesizeVoice(session.voice_transcript)}
-                className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono font-bold text-xs flex items-center gap-2 cursor-pointer shadow-lg shadow-amber-500/20"
+                className="px-4 py-2 rounded-xl bg-[#2a9d8f] hover:bg-[#21867a] disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
               >
                 <Sparkles className="w-4 h-4" />
                 {isSynthesizing
-                  ? 'Synthesizing Blueprint & Running DDL Check...'
-                  : 'Run Dual-Axis LLM Synthesizer & DDL Check'}
+                  ? 'Synthesizing Blueprint & Verifying Registry...'
+                  : 'Synthesize Competency Blueprint'}
               </button>
             </div>
             <textarea
               rows={3}
               value={session.voice_transcript}
               onChange={(e) => onPatchSession({ voice_transcript: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-              placeholder="Spoken voice transcript appears here..."
+              className="w-full bg-white border border-[#dfd8ca] rounded-xl p-3.5 text-sm text-[#163038] focus:outline-none focus:border-[#2a9d8f]"
+              placeholder="Spoken client narrative appears here..."
             />
           </div>
 
           {/* Synthesized Technical Competency Blueprint */}
-          <div className="bg-emerald-950/20 border border-emerald-500/40 rounded-xl p-4 space-y-3">
+          <div className="bg-gradient-to-r from-[#e6f6f3] to-[#eaf4fa] border border-[#bce5dd] rounded-2xl p-5 space-y-3.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-400">
-                  EXTRACTED TECHNICAL COMPETENCY BLUEPRINT
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#1b7a6e]">
+                  Validated Competency Blueprint
                 </span>
-                <h4 className="text-base font-bold text-white">
+                <h4 className="text-base font-bold text-[#163038]">
                   {session.skill_blueprint_json.headline_strength}
                 </h4>
               </div>
-              <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Mapped to Canadian NOC Taxonomy
+              <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/90 text-[#1e5678] border border-[#c2dff0]">
+                Aligned with Canadian NOC Standards
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {session.skill_blueprint_json.extracted_pro_skills.map((item, i) => (
                 <div
                   key={i}
-                  className="bg-slate-950/90 border border-slate-800 rounded-lg p-3 space-y-1.5"
+                  className="bg-white/95 border border-[#d6ebe6] rounded-xl p-3.5 space-y-1.5 shadow-2xs"
                 >
-                  <div className="text-xs text-slate-400">
-                    <span className="font-mono text-slate-500 uppercase">What You Did: </span>
+                  <div className="text-xs text-[#547078]">
+                    <span className="font-semibold text-[#38545c] uppercase text-[10px]">Experience Shared: </span>
                     {item.what_you_did}
                   </div>
-                  <div className="text-sm font-bold text-amber-300">
+                  <div className="text-sm font-bold text-[#1b7a6e]">
                     ✓ {item.pro_translation}
                   </div>
-                  <div className="text-[11px] font-mono text-emerald-400">
+                  <div className="text-[11px] font-mono text-[#2c6e9b] font-medium">
                     {item.noc_domain}
                   </div>
                 </div>
@@ -649,53 +656,53 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
       {/* MODULE 4: THE LOADOUT (TACTILE CARD SORT) */}
       {activeModule === 'LOADOUT_DECK' && (
-        <div className="p-5 space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div className="p-6 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
-              <div className="text-xs font-mono text-amber-400 uppercase tracking-widest">
-                MODULE 04 // TACTILE WORK ENVIRONMENT CARD SORT (SYNCED WITH CLIENT PHONE)
+              <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
+                Module 04 • Tactile Environment Card Sort (Synced Live with Handset)
               </div>
-              <h3 className="text-lg font-bold text-white mt-0.5">
-                The Loadout — Lock It In, Test Run, or Scrap It
+              <h3 className="text-lg font-bold text-[#163038] mt-0.5">
+                The Loadout — Preferred Work Settings &amp; Environments
               </h3>
-              <p className="text-sm text-slate-400 mt-1">
-                Client can tap or swipe these on their companion phone or tablet. Directly weights PostgreSQL program matching.
+              <p className="text-sm text-[#547078] mt-1">
+                Clients can tap these cards on their companion phone or tablet. Directly weights verified program recommendations.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {session.loadout_cards.map((card) => {
               return (
                 <div
                   key={card.id}
-                  className="bg-slate-950/90 border border-slate-800 rounded-xl p-4 flex flex-col justify-between gap-3"
+                  className="linen-card border border-[#e2d9c8] rounded-2xl p-4 flex flex-col justify-between gap-3.5"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">
+                      <span className="text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-[#e8f3f9] text-[#246185] border border-[#c6e1f2]">
                         {card.category.replace('_', ' ')}
                       </span>
                       <button
                         onClick={() => speakPrompt(`${card.title}. ${card.tagline}`)}
-                        className="text-slate-400 hover:text-amber-400 cursor-pointer"
+                        className="text-[#5a757d] hover:text-[#2a9d8f] cursor-pointer"
                       >
-                        <Volume2 className="w-3.5 h-3.5" />
+                        <Volume2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <h4 className="font-bold text-sm text-white mt-1">{card.title}</h4>
-                    <p className="text-xs text-slate-400 mt-1">{card.tagline}</p>
+                    <h4 className="font-bold text-sm text-[#163038] mt-1.5">{card.title}</h4>
+                    <p className="text-xs text-[#547078] mt-1">{card.tagline}</p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-slate-900">
+                  <div className="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-[#e6dfd1]">
                     {(['Lock It In', 'Test Run', 'Scrap It'] as const).map((statusOption) => {
                       const active = card.status === statusOption;
                       const activeStyle =
                         statusOption === 'Lock It In'
-                          ? 'bg-emerald-500 text-slate-950 font-bold'
+                          ? 'bg-[#2a9d8f] text-white font-semibold shadow-2xs'
                           : statusOption === 'Test Run'
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'bg-rose-500/80 text-white font-bold';
+                          ? 'bg-[#3b82a6] text-white font-semibold shadow-2xs'
+                          : 'bg-[#d9776c] text-white font-semibold';
                       return (
                         <button
                           key={statusOption}
@@ -708,10 +715,10 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                               completed_modules_json: markModuleCompleted('LOADOUT_DECK')
                             });
                           }}
-                          className={`py-1.5 px-2 rounded text-[11px] font-mono transition-all cursor-pointer ${
+                          className={`py-1.5 px-2 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
                             active
                               ? activeStyle
-                              : 'bg-slate-900 text-slate-400 hover:bg-slate-800'
+                              : 'bg-white text-[#4c6770] border border-[#e2dcd0] hover:bg-[#f1f8f6]'
                           }`}
                         >
                           {statusOption}
@@ -728,22 +735,22 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
       {/* MODULE 5: THE PRESSURE VALVE */}
       {activeModule === 'PRESSURE_VALVE' && (
-        <div className="p-5 space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div className="p-6 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
-              <div className="text-xs font-mono text-amber-400 uppercase tracking-widest">
-                MODULE 05 // MASLOW TIER-1 BARRIER OFFLOADER
+              <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
+                Module 05 • Immediate Stabilization &amp; Barrier Relief
               </div>
-              <h3 className="text-lg font-bold text-white mt-0.5">
-                The Pressure Valve — Hand Over 1 or 2 Heavy Rocks Today
+              <h3 className="text-lg font-bold text-[#163038] mt-0.5">
+                The Pressure Valve — Let Us Take 1 or 2 Practical Burdens Off Your Plate Today
               </h3>
-              <p className="text-sm text-slate-400 mt-1">
-                A job or school placement will fail if immediate survival or administrative friction isn&apos;t cleared first. Tap any block to hand it over to the coordinator and filter the PostgreSQL DDL query.
+              <p className="text-sm text-[#547078] mt-1">
+                Training or employment works best when immediate logistics are supported first. Tap any item below to include it in your support plan.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
             {BARRIER_BLOCKS.map((block) => {
               const isActive = session.active_barriers.includes(block.id);
               return (
@@ -759,33 +766,33 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                       completed_modules_json: markModuleCompleted('PRESSURE_VALVE')
                     });
                   }}
-                  className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                  className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
                     isActive
-                      ? 'bg-amber-500/20 border-amber-400 text-white shadow-lg shadow-amber-500/10'
-                      : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-slate-700'
+                      ? 'bg-[#e6f6f3] border-[#2a9d8f] text-[#154d46] shadow-sm'
+                      : 'linen-card border-[#e2d9c8] text-[#35525a] hover:border-[#9fd6cc] hover:bg-white'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <ShieldAlert
                         className={`w-5 h-5 ${
-                          isActive ? 'text-amber-400' : 'text-slate-500'
+                          isActive ? 'text-[#1b7a6e]' : 'text-[#6c868e]'
                         }`}
                       />
                       <span
-                        className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded ${
+                        className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
                           isActive
-                            ? 'bg-amber-400 text-slate-950 font-bold'
-                            : 'bg-slate-900 text-slate-500'
+                            ? 'bg-[#2a9d8f] text-white'
+                            : 'bg-white text-[#647f87] border border-[#e2dcd0]'
                         }`}
                       >
-                        {isActive ? 'OFFLOADED' : 'TAP TO HAND OVER'}
+                        {isActive ? 'Included' : 'Select'}
                       </span>
                     </div>
-                    <div className="font-bold text-sm">{block.title}</div>
-                    <div className="text-xs text-slate-400 mt-1">{block.subtitle}</div>
+                    <div className="font-bold text-sm text-[#163038]">{block.title}</div>
+                    <div className="text-xs text-[#547078] mt-1">{block.subtitle}</div>
                   </div>
-                  <div className="text-[10px] font-mono text-emerald-400 mt-3 pt-2 border-t border-slate-800/80">
+                  <div className="text-[10px] font-mono text-[#2c6e9b] mt-3 pt-2 border-t border-[#e3dccf]">
                     {block.reliefTag}
                   </div>
                 </button>
