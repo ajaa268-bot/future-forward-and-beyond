@@ -1,10 +1,7 @@
 import React from 'react';
 import {
-  Smartphone,
-  CheckCircle2,
   Bus,
   Phone,
-  ShieldAlert,
   Sparkles,
   Volume2,
   Wifi
@@ -23,6 +20,12 @@ interface ClientCompanionPhoneProps {
   };
   onPatchSession: (patch: Partial<ClientWorkbookSession>) => void;
 }
+
+const SIMPLE_CHOICE_LABELS: Record<'Lock It In' | 'Test Run' | 'Scrap It', string> = {
+  'Lock It In': 'Love This',
+  'Test Run': 'Maybe Try',
+  'Scrap It': 'Not For Me'
+};
 
 export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
   session,
@@ -48,10 +51,10 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
       {/* Phone Top Notch / Status Bar */}
       <div className="flex items-center justify-between px-2.5 pb-3 border-b border-[#eae4d8] text-[11px] font-medium text-[#547078]">
         <span className="flex items-center gap-1.5 text-[#1b7a6e] font-semibold">
-          <Wifi className="w-3.5 h-3.5" /> Synced #{session.session_id}
+          <Wifi className="w-3.5 h-3.5" /> Live Sync
         </span>
-        <span className="font-bold text-[#163038]">{session.client_alias}</span>
-        <span className="text-[#2c6e9b] font-medium">Pocket Takeaway</span>
+        <span className="font-bold text-[#163038]">{session.client_alias}’s Pocket Guide</span>
+        <span className="text-[#2c6e9b] font-medium">Take-Home Card</span>
       </div>
 
       <div className="space-y-4 mt-3.5 max-h-[760px] overflow-y-auto pr-1">
@@ -59,7 +62,7 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
         <div className="bg-gradient-to-br from-[#e6f6f3] via-[#f2faf8] to-[#e8f3f9] border border-[#bce5dd] rounded-2xl p-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#1b7a6e] flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> Your Strength Blueprint
+              <Sparkles className="w-3.5 h-3.5" /> What You’re Great At
             </span>
             <button
               onClick={() =>
@@ -70,7 +73,7 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
                 )
               }
               className="text-[#2c6e9b] hover:text-[#1b7a6e] p-1 rounded-lg bg-white/80 cursor-pointer"
-              title="Read Blueprint Aloud"
+              title="Listen Out Loud"
             >
               <Volume2 className="w-4 h-4" />
             </button>
@@ -92,20 +95,21 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
           </div>
         </div>
 
-        {/* 2. "My Next 1 Step" Verified Card */}
+        {/* 2. "My Next 1 Step" Card */}
         {pinnedProgram && (
           <div className="bg-[#f3fbf9] border-2 border-[#2a9d8f] rounded-2xl p-4 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#2a9d8f] text-white">
-                My Next 1 Step (Verified)
+                My Next 1 Step
               </span>
               <button
                 onClick={() =>
                   speakText(
-                    `Your next step is ${pinnedProgram.program_name} in ${pinnedProgram.municipality}. Transit stop: ${pinnedProgram.nearest_transit_stop}. Contact: ${pinnedProgram.contact_lead_name}.`
+                    `Your next step is ${pinnedProgram.program_name} in ${pinnedProgram.municipality}. Bus or SkyTrain stop: ${pinnedProgram.nearest_transit_stop}. Contact: ${pinnedProgram.contact_lead_name}.`
                   )
                 }
                 className="text-[#1b7a6e] hover:text-[#163038] cursor-pointer"
+                title="Listen Out Loud"
               >
                 <Volume2 className="w-4 h-4" />
               </button>
@@ -126,27 +130,27 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
             </div>
 
             <div className="text-[11px] text-[#28454e] linen-card rounded-xl p-2.5 border border-[#e3dccf]">
-              <strong className="text-[#1b7a6e]">Warm Handoff Plan:</strong>{' '}
+              <strong className="text-[#1b7a6e]">Easy First Step:</strong>{' '}
               {session.next_micro_step_text}
             </div>
           </div>
         )}
 
-        {/* 3. Immediate Relief Win Today */}
+        {/* 3. Immediate Help Today */}
         {reliefProgram && (
           <div className="bg-[#eaf4fa] border border-[#bddbf0] rounded-2xl p-3.5 space-y-1">
             <div className="text-[10px] font-bold uppercase text-[#1e5678]">
-              ★ Today&apos;s Immediate Support Win
+              ★ Help Available Today (Meals &amp; Bus Tickets)
             </div>
             <div className="text-xs font-bold text-[#163038]">{reliefProgram.program_name}</div>
             <div className="text-[11px] text-[#48656e]">{reliefProgram.nearest_transit_stop}</div>
           </div>
         )}
 
-        {/* 4. Interactive Card Swiping ("The Loadout" on Phone) */}
+        {/* 4. Quick Work Preferences on Phone */}
         <div className="linen-card border border-[#e3dccf] rounded-2xl p-3.5 space-y-2.5">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#4a656d]">
-            Tap Your Work Preferences (Syncs Live)
+            Tap What Sounds Good to You
           </div>
           <div className="space-y-2">
             {session.loadout_cards.map((card) => (
@@ -156,7 +160,9 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#163038]">{card.title}</span>
-                  <span className="text-[10px] font-semibold text-[#1b7a6e]">{card.status}</span>
+                  <span className="text-[10px] font-semibold text-[#1b7a6e]">
+                    {SIMPLE_CHOICE_LABELS[card.status as 'Lock It In' | 'Test Run' | 'Scrap It'] || card.status}
+                  </span>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">
                   {(['Lock It In', 'Test Run', 'Scrap It'] as const).map((st) => {
@@ -180,7 +186,7 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
                             : 'bg-[#f6f3ec] text-[#4c6770] hover:bg-[#e6f6f3]'
                         }`}
                       >
-                        {st}
+                        {SIMPLE_CHOICE_LABELS[st]}
                       </button>
                     );
                   })}

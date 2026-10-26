@@ -5,17 +5,11 @@ import {
   Headphones,
   FileText,
   Mic,
-  Flame,
-  Speaker,
-  Trees,
   CheckCircle2,
-  AlertTriangle,
   Sparkles,
   Volume2,
-  Sliders,
-  Compass,
-  ShieldAlert,
-  Radio
+  HeartHandshake,
+  Compass
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
@@ -30,28 +24,31 @@ interface WorkbookModulesCanvasProps {
   isSynthesizing: boolean;
 }
 
-const TROUBLESHOOTER_SCENARIOS = [
+const EVERYDAY_SCENARIOS = [
   {
     id: 'kitchen_rush',
-    title: 'SCENARIO A // COMMERCIAL KITCHEN RUSH',
-    subtitle: 'Prep line is backed up 15 mins before service & primary range burner #2 drops pressure.',
-    badge: 'Culinary / Line Triage',
+    title: 'Cooking a Big Meal for People',
+    subtitle: 'You are helping make dinner for a hungry group, and one side of the stove stops heating up.',
+    badge: 'Food & Kitchens',
     nodes: [
       {
         id: 'isolate_burner',
-        label: 'Shut off valve #2, pull regulator jet & shift high-heat pans to flat-top',
+        stepTitle: 'Fix It Directly',
+        label: 'Turn off the broken burner and move the pots to the working side so the food keeps cooking.',
         style: 'Root-Cause Isolation' as const,
         iq: 5
       },
       {
         id: 'reroute_prep',
-        label: 'Clear central prep island & re-stage cold plating away from hot line bottleneck',
+        stepTitle: 'Organize the Space',
+        label: 'Clear space on the counter so plates, salads, and cold food are ready to hand out right away.',
         style: 'Spatial Reorganization' as const,
         iq: 4
       },
       {
         id: 'delegate_runner',
-        label: 'Have dish/prep runner batch-portion sauces while you call the pass',
+        stepTitle: 'Team Up Together',
+        label: 'Ask a helper to dish up the side plates while you finish cooking the main meal.',
         style: 'Crew Delegation' as const,
         iq: 4
       }
@@ -59,25 +56,28 @@ const TROUBLESHOOTER_SCENARIOS = [
   },
   {
     id: 'signal_hardware',
-    title: 'SCENARIO B // STAGE AUDIO RIG & SERVER RACK',
-    subtitle: 'Main PA left stack is dead and power distro breaker keeps tripping before soundcheck.',
-    badge: 'Signal Flow / Hardware',
+    title: 'Setting Up Music or a TV',
+    subtitle: 'You are setting up speakers or a TV for friends, and no sound is coming out.',
+    badge: 'Everyday Tech & Sound',
     nodes: [
       {
         id: 'trace_signal',
-        label: 'Swap XLR/patch at stage snake input #1 to isolate mic vs. board channel fault',
+        stepTitle: 'Check Step-by-Step',
+        label: 'Check the cords one by one or try plugging in a different cable to see which one is loose.',
         style: 'Root-Cause Isolation' as const,
         iq: 5
       },
       {
         id: 'split_power',
-        label: 'Re-route high-draw sub amps onto dedicated 20A circuit leg',
+        stepTitle: 'Move to a Better Plug',
+        label: 'Plug the big speaker into its own wall outlet so the power strip does not overload.',
         style: 'Spatial Reorganization' as const,
         iq: 5
       },
       {
         id: 'stage_patch',
-        label: 'Direct stagehand to label & coil dead lines off main load-in ramp',
+        stepTitle: 'Keep the Room Safe',
+        label: 'Ask someone to neatly coil the extra cords out of the walkway while you test the sound.',
         style: 'Crew Delegation' as const,
         iq: 4
       }
@@ -85,25 +85,28 @@ const TROUBLESHOOTER_SCENARIOS = [
   },
   {
     id: 'shop_bay',
-    title: 'SCENARIO C // FABRICATION & REPAIR BAY',
-    subtitle: 'Pallet delivery is blocking the main bay door and two critical torque wrenches are missing.',
-    badge: 'Shop Floor / Fabrication',
+    title: 'Busy Garage or Work Area',
+    subtitle: 'Heavy boxes are blocking the main doorway, and a tool you need isn’t in its usual spot.',
+    badge: 'Hands-On & Outdoors',
     nodes: [
       {
         id: 'clear_egress',
-        label: 'Pallet-jack stock to side staging zone first so lift & emergency lanes stay clear',
+        stepTitle: 'Clear the Path First',
+        label: 'Move the boxes to the side wall first so everyone can walk through safely.',
         style: 'Spatial Reorganization' as const,
         iq: 5
       },
       {
         id: 'shadow_board',
-        label: 'Inspect last active service bay & lock out calibrated substitute wrench',
+        stepTitle: 'Find What Works',
+        label: 'Check the last table where the tool was used, or grab another tool that gets the job done.',
         style: 'Root-Cause Isolation' as const,
         iq: 4
       },
       {
         id: 'spotter_call',
-        label: 'Post a crew spotter at bay door while moving heavy stock',
+        stepTitle: 'Look Out for Each Other',
+        label: 'Ask a teammate to watch the doorway and guide people around while you move the boxes.',
         style: 'Crew Delegation' as const,
         iq: 4
       }
@@ -111,53 +114,65 @@ const TROUBLESHOOTER_SCENARIOS = [
   }
 ];
 
+const SIMPLE_STYLE_LABELS: Record<string, string> = {
+  'Root-Cause Isolation': 'Hands-On Problem Solver',
+  'Spatial Reorganization': 'Practical Space Organizer',
+  'Crew Delegation': 'Supportive Team Player'
+};
+
 const VOICE_PRESETS = [
   {
-    label: 'Preset 1: Cook-Off & Audio Mixer Fix (Quadrant A — High IQ / Low Text)',
-    text: "Last month our community centre cook-off had one of the big propane burners losing flame right when we had 60 plates queued up. I shut the faulty line, pulled the regulator apart to clear a greased jet, and re-staged the prep pans onto the flat-top so nobody waited. Same way I fix up old gaming PCs and audio mixers when a channel drops out—trace the signal or fuel line from the source instead of guessing."
+    label: 'Example 1: Cooking for a Group & Fixing Home Electronics',
+    text: "Last month at a big family and community dinner, one side of the stove stopped working right when everyone was waiting to eat. I turned off the bad burner, moved the big pots over, and got all the plates served warm on time. I'm also the person friends call when their TV, speaker, or computer isn't working—I just check the cords one by one until it works."
   },
   {
-    label: 'Preset 2: Bike Hydraulics & Shop Welding (Quadrant A — Mechanical Trades)',
-    text: "My neighbour's e-bike had a seized rear caliper and stripped rotor bolts. I soaked the threads, used an extractor bit without cracking the hub, bled the hydraulic brake line by hand, and trued the wheel on a makeshift stand. Give me tools and a shop bench and I can figure out how anything goes together, I just hate filling out government forms."
+    label: 'Example 2: Fixing Bikes, Tools & Building Things by Hand',
+    text: "My friend's bike brakes were stuck and the chain kept slipping. I took the wheel off, cleaned and tightened the parts, and got it riding smooth again. Give me real tools and a workbench and I can figure out how anything goes together—I just hate filling out long forms."
   },
   {
-    label: 'Preset 3: Outdoor Trail Crew & Nursery Layout (Quadrant C/A — Green Jobs)',
-    text: "I helped run the community garden beds and storm drainage ditching after the heavy rain. We trenched gravel channels so the root beds wouldn't rot and organized the tool shed by hand. I do best outdoors moving around with a small crew instead of sitting under fluorescent lights."
+    label: 'Example 3: Helping Outdoors, Gardening & Yard Work',
+    text: "After the heavy rain, I helped clear out the community garden beds, dug a small path so the water would drain away, and organized all the tools in the shed. I feel best working outside and moving around with a friendly group instead of sitting indoors."
   }
 ];
 
 const BARRIER_BLOCKS = [
   {
     id: 'Transit Pass / Compass',
-    title: 'Transit Pass / Compass',
-    subtitle: 'Bus / SkyTrain fare covered immediately',
-    reliefTag: 'Triggers provides_transit_tickets = TRUE'
+    title: 'Bus Pass / Compass Card',
+    subtitle: 'Free bus and SkyTrain tickets so getting there is easy',
+    helpSummary: 'Included: Compass transit tickets today'
   },
   {
     id: 'Groceries / Meals',
-    title: 'Groceries / Hot Meals',
-    subtitle: 'Daily kitchen meals & emergency food hamper',
-    reliefTag: 'Triggers provides_food_or_meals = TRUE'
+    title: 'Groceries & Hot Meals',
+    subtitle: 'Daily hot meals and take-home food support',
+    helpSummary: 'Included: Programs with free daily meals'
   },
   {
     id: 'Paperwork / Scribe Help',
-    title: 'Paperwork / Scribe Help',
-    subtitle: 'Coordinator fills out intake & union forms with you',
-    reliefTag: 'Triggers scribe_or_reader_available = TRUE'
+    title: 'Help With Forms',
+    subtitle: 'We sit down with a coffee and fill out any paperwork together',
+    helpSummary: 'Included: Staff handles the forms with you'
   },
   {
     id: 'Replacement ID / SIN',
-    title: 'Replacement ID / SIN Clinic',
-    subtitle: 'Route to zero-ID drop-in + free ID clinic voucher',
-    reliefTag: 'Triggers requires_government_id = FALSE'
+    title: 'Need ID or SIN Card',
+    subtitle: 'Start right away with no ID needed + free help replacing lost ID',
+    helpSummary: 'Included: No ID required to start'
   },
   {
     id: 'Work Boots / Gear',
-    title: 'CSA Work Boots / Rain Gear',
-    subtitle: 'Steel-toe boots, gloves & rain gear voucher',
-    reliefTag: 'Triggers provides_gear_or_boots = TRUE'
+    title: 'Work Boots & Rain Gear',
+    subtitle: 'Free steel-toe boots, gloves, and weather gear before Day 1',
+    helpSummary: 'Included: Free boots & gear voucher'
   }
 ];
+
+const LOADOUT_BUTTON_LABELS: Record<'Lock It In' | 'Test Run' | 'Scrap It', string> = {
+  'Lock It In': 'Love This',
+  'Test Run': 'Maybe Try',
+  'Scrap It': 'Not For Me'
+};
 
 export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
   session,
@@ -185,22 +200,22 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
   return (
     <div className="clinical-card border border-[#dfe6dd] rounded-2xl overflow-hidden">
-      {/* Module Selector Ribbon (Practitioner Drop-In Drawer) */}
+      {/* Simple, Welcoming Step Navigation */}
       <div className="linen-card border-b border-[#e4ddd0] px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Radio className="w-4 h-4 text-[#2a9d8f]" />
+          <Compass className="w-4 h-4 text-[#2a9d8f]" />
           <span className="text-xs font-semibold uppercase tracking-wider text-[#46636b]">
-            Interactive Assessment Modules (Zero-Spelling Guided Suite)
+            Step-by-Step Strengths Guide (No Typing or Spelling Needed)
           </span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {(
             [
-              { code: 'TROUBLESHOOTER', label: '01 Troubleshooter' },
-              { code: 'SPEC_SHEET', label: '02 System Spec' },
-              { code: 'VOICE_BLUEPRINT', label: '03 Voice-to-Blueprint' },
-              { code: 'LOADOUT_DECK', label: '04 The Loadout' },
-              { code: 'PRESSURE_VALVE', label: '05 Pressure Valve' }
+              { code: 'TROUBLESHOOTER', label: '1. Everyday Situations' },
+              { code: 'SPEC_SHEET', label: '2. How You Learn Best' },
+              { code: 'VOICE_BLUEPRINT', label: '3. Tell Your Story' },
+              { code: 'LOADOUT_DECK', label: '4. Work You’d Enjoy' },
+              { code: 'PRESSURE_VALVE', label: '5. Help Needed Today' }
             ] as Array<{ code: ModuleCode; label: string }>
           ).map((tab) => {
             const isActive = activeModule === tab.code;
@@ -231,35 +246,31 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
         </div>
       </div>
 
-      {/* MODULE 1: THE TROUBLESHOOTER */}
+      {/* STEP 1: EVERYDAY SITUATIONS (Simple, Real-World Ways) */}
       {activeModule === 'TROUBLESHOOTER' && (
         <div className="p-6 space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
               <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
-                Module 01 • Visual Scenario Diagnostics (Zero Typing or Spelling)
+                Step 1 • Real-Life Everyday Moments
               </div>
               <h3 className="text-lg font-bold text-[#163038] mt-0.5">
-                The Troubleshooter — Practical Problem-Solving &amp; Triage
+                How Do You Naturally Handle Everyday Situations?
               </h3>
               <p className="text-sm text-[#547078] mt-1">
-                Select a real-world scenario below and tap your first instinct. Evaluates{' '}
-                <code className="text-[#1f6e8c] bg-[#e9f4f9] px-1.5 py-0.5 rounded font-mono text-xs">
-                  problem_solving_complexity (1–5)
-                </code>{' '}
-                independently from reading or paperwork tolerance.
+                Pick any everyday situation below and tap what you would do first. There are no wrong answers—everyone has their own practical way of helping out.
               </p>
             </div>
             <div className="bg-[#eaf7f4] border border-[#bce5dd] rounded-xl px-4 py-2.5 text-right">
-              <div className="text-[11px] font-medium text-[#3b6e67] uppercase">Detected Triage Approach</div>
+              <div className="text-[11px] font-medium text-[#3b6e67] uppercase">Your Natural Style</div>
               <div className="text-sm font-bold text-[#155e54]">
-                {session.troubleshooter_selections.solving_style} (Tier {session.problem_solving_complexity}/5)
+                {SIMPLE_STYLE_LABELS[session.troubleshooter_selections.solving_style] || 'Hands-On Problem Solver'}
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {TROUBLESHOOTER_SCENARIOS.map((scen) => {
+            {EVERYDAY_SCENARIOS.map((scen) => {
               const isSelectedScenario =
                 session.troubleshooter_selections.scenario_id === scen.id;
               return (
@@ -278,19 +289,19 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                       </span>
                       <button
                         onClick={() => speakPrompt(`${scen.title}. ${scen.subtitle}`)}
-                        title="Tap to Read Aloud"
+                        title="Listen Out Loud"
                         className="text-[#56747d] hover:text-[#2a9d8f] p-1 rounded-lg hover:bg-white/80 cursor-pointer transition-colors"
                       >
                         <Volume2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <h4 className="font-bold text-sm text-[#163038]">{scen.title}</h4>
+                    <h4 className="font-bold text-base text-[#163038]">{scen.title}</h4>
                     <p className="text-xs text-[#547078] mt-1 mb-3.5 leading-relaxed">
                       {scen.subtitle}
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {scen.nodes.map((node) => {
                       const activeNode =
                         isSelectedScenario &&
@@ -309,21 +320,23 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                               completed_modules_json: markModuleCompleted('TROUBLESHOOTER')
                             })
                           }
-                          className={`w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
+                          className={`w-full text-left p-3.5 rounded-xl border text-xs transition-all cursor-pointer ${
                             activeNode
                               ? 'bg-[#2a9d8f] border-[#1f7a6e] text-white font-medium shadow-xs'
                               : 'bg-white border-[#e2dcd0] text-[#28454e] hover:border-[#2a9d8f]/60 hover:bg-[#f8fcfb]'
                           }`}
                         >
-                          <div className="flex items-center justify-between text-[10px] font-semibold uppercase mb-1">
+                          <div className="flex items-center justify-between text-[11px] font-bold mb-1">
                             <span className={activeNode ? 'text-[#d8f7f2]' : 'text-[#2a9d8f]'}>
-                              {node.style}
+                              {node.stepTitle}
                             </span>
-                            <span className={activeNode ? 'text-white/90' : 'text-[#647f87]'}>
-                              Complexity {node.iq}/5
-                            </span>
+                            {activeNode && (
+                              <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full text-white">
+                                Selected
+                              </span>
+                            )}
                           </div>
-                          <div className="leading-snug">{node.label}</div>
+                          <div className="leading-relaxed">{node.label}</div>
                         </button>
                       );
                     })}
@@ -335,63 +348,65 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
         </div>
       )}
 
-      {/* MODULE 2: SYSTEM SPEC SHEET */}
+      {/* STEP 2: HOW YOU LEARN BEST */}
       {activeModule === 'SPEC_SHEET' && (
         <div className="p-6 space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
               <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
-                Module 02 • Cognitive &amp; Sensory Comfort Profile
+                Step 2 • Your Comfort Zone
               </div>
               <h3 className="text-lg font-bold text-[#163038] mt-0.5">
-                System Spec Sheet — How Your Mind Works Most Comfortably
+                How Do You Like to Learn &amp; Work?
               </h3>
               <p className="text-sm text-[#547078] mt-1">
-                Tune your preferred learning channel, collaborative pace, and environmental comfort. Automatically configures{' '}
-                <code className="text-[#1f6e8c] bg-[#e9f4f9] px-1.5 py-0.5 rounded font-mono text-xs">
-                  text_admin_tolerance
-                </code>{' '}
-                and practical testing accommodations.
+                Everyone learns differently. Pick what feels easiest for you so we only match you with welcoming, comfortable programs.
               </p>
             </div>
             <div className="bg-[#e8f3f9] border border-[#c0dfef] rounded-xl px-4 py-2.5 text-right">
-              <div className="text-[11px] font-medium text-[#2c678a] uppercase">Reading / Form Comfort</div>
+              <div className="text-[11px] font-medium text-[#2c678a] uppercase">Preferred Way to Learn</div>
               <div className="text-sm font-bold text-[#194c6b]">
-                Score: {session.text_admin_tolerance}/5 • {session.preferred_learning_modality.replace('_', ' ')}
+                {session.preferred_learning_modality === 'Kinesthetic_HandsOn'
+                  ? 'Hands-On / Watch & Do'
+                  : session.preferred_learning_modality === 'Visual_Blueprint'
+                  ? 'Pictures & Examples'
+                  : session.preferred_learning_modality === 'Verbal_Coaching'
+                  ? 'Talk It Through Together'
+                  : 'Short Written Steps'}
               </div>
             </div>
           </div>
 
-          {/* 1. Input Channel */}
+          {/* 1. How You Learn Best */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[#3d5b63] mb-2.5">
-              1. Input Channel (How You Absorb New Skills Fastest):
+              1. When learning something new, what works best for you?
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {(
                 [
                   {
                     id: 'Kinesthetic_HandsOn',
-                    label: 'Hands-On / Watch & Do',
-                    sub: 'Practical demonstration',
+                    label: 'Show Me Hands-On',
+                    sub: 'Watch someone do it, then try it myself',
                     icon: Wrench
                   },
                   {
                     id: 'Visual_Blueprint',
-                    label: 'Visual Diagram / Blueprint',
-                    sub: 'Schematics & layouts',
+                    label: 'Pictures & Examples',
+                    sub: 'Look at photos or a simple example',
                     icon: Cpu
                   },
                   {
                     id: 'Verbal_Coaching',
-                    label: 'Talk It Through / Audio',
-                    sub: 'Spoken walkthrough',
+                    label: 'Talk Me Through It',
+                    sub: 'Have someone explain it out loud',
                     icon: Headphones
                   },
                   {
                     id: 'Text_Manual',
-                    label: 'Written Manual / Text',
-                    sub: 'Checklists & guides',
+                    label: 'Simple Checklist',
+                    sub: 'Follow a clear, short written list',
                     icon: FileText
                   }
                 ] as Array<{
@@ -437,13 +452,19 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
             </div>
           </div>
 
-          {/* 2. Operating Mode Sliders */}
+          {/* 2. Everyday Pace Sliders */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 linen-card border border-[#e3dccf] rounded-2xl p-4">
             <div className="bg-white/80 rounded-xl p-3.5 border border-[#eae3d5]">
               <div className="flex justify-between text-xs font-semibold text-[#35525a] mb-2">
-                <span>SOLO DEEP-FOCUS</span>
-                <span className="text-[#2a9d8f] font-bold">{session.spec_sheet_state.crew_slider}%</span>
-                <span>SMALL SUPPORTIVE CREW</span>
+                <span>Working on My Own</span>
+                <span className="text-[#2a9d8f] font-bold">
+                  {session.spec_sheet_state.crew_slider > 60
+                    ? 'Small Friendly Group'
+                    : session.spec_sheet_state.crew_slider < 40
+                    ? 'Mostly on My Own'
+                    : 'Mix of Both'}
+                </span>
+                <span>Small Friendly Group</span>
               </div>
               <input
                 type="range"
@@ -467,9 +488,15 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
 
             <div className="bg-white/80 rounded-xl p-3.5 border border-[#eae3d5]">
               <div className="flex justify-between text-xs font-semibold text-[#35525a] mb-2">
-                <span>CLEAR STEP CHECKLIST</span>
-                <span className="text-[#2c6e9b] font-bold">{session.spec_sheet_state.structure_slider}%</span>
-                <span>SHOW END GOAL &amp; LET ME BUILD</span>
+                <span>One Step at a Time</span>
+                <span className="text-[#2c6e9b] font-bold">
+                  {session.spec_sheet_state.structure_slider > 60
+                    ? 'Show the Goal & Let Me Try'
+                    : session.spec_sheet_state.structure_slider < 40
+                    ? 'One Step at a Time'
+                    : 'Balanced Guidance'}
+                </span>
+                <span>Show the Goal &amp; Let Me Try</span>
               </div>
               <input
                 type="range"
@@ -492,27 +519,39 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
             </div>
           </div>
 
-          {/* 3. System Bottlenecks */}
+          {/* 3. Things You Want to Avoid */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-[#3d5b63] mb-2.5">
-              3. Friction Points (What Drains Your Energy — Tap to Accommodate):
+              3. What drains your energy? (Tap any you want us to avoid):
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
-                'Heavy Reading / Spelling Forms',
-                'Sitting Still at a Desk',
-                'Loud Crowded Rooms',
-                'Early Morning Transit'
-              ].map((bottleneck) => {
-                const active = session.spec_sheet_state.bottlenecks.includes(bottleneck);
+                {
+                  id: 'Heavy Reading / Spelling Forms',
+                  label: 'Lots of Reading or Paperwork'
+                },
+                {
+                  id: 'Sitting Still at a Desk',
+                  label: 'Sitting Still at a Desk All Day'
+                },
+                {
+                  id: 'Loud Crowded Rooms',
+                  label: 'Loud, Crowded Rooms'
+                },
+                {
+                  id: 'Early Morning Transit',
+                  label: 'Super Early Morning Bus Rides'
+                }
+              ].map((item) => {
+                const active = session.spec_sheet_state.bottlenecks.includes(item.id);
                 return (
                   <button
-                    key={bottleneck}
+                    key={item.id}
                     onClick={() => {
-                      const exists = session.spec_sheet_state.bottlenecks.includes(bottleneck);
+                      const exists = session.spec_sheet_state.bottlenecks.includes(item.id);
                       const next = exists
-                        ? session.spec_sheet_state.bottlenecks.filter((b) => b !== bottleneck)
-                        : [...session.spec_sheet_state.bottlenecks, bottleneck];
+                        ? session.spec_sheet_state.bottlenecks.filter((b) => b !== item.id)
+                        : [...session.spec_sheet_state.bottlenecks, item.id];
                       const lowersText = next.includes('Heavy Reading / Spelling Forms');
                       onPatchSession({
                         text_admin_tolerance: lowersText ? 1 : 3,
@@ -529,7 +568,7 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                         : 'bg-white border-[#e3dccf] text-[#4c6770] hover:border-[#b5dfd7]'
                     }`}
                   >
-                    <span>{bottleneck}</span>
+                    <span>{item.label}</span>
                     {active && <CheckCircle2 className="w-4 h-4 text-[#2c6e9b] shrink-0" />}
                   </button>
                 );
@@ -539,37 +578,37 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
         </div>
       )}
 
-      {/* MODULE 3: VOICE-TO-BLUEPRINT */}
+      {/* STEP 3: TELL YOUR STORY */}
       {activeModule === 'VOICE_BLUEPRINT' && (
         <div className="p-6 space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
               <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
-                Module 03 • Spoken Skill Extractor (Whisper STT + Dual-Axis Synthesizer)
+                Step 3 • Everyday Experiences Count
               </div>
               <h3 className="text-lg font-bold text-[#163038] mt-0.5">
-                Voice-to-Blueprint — Share a Story, See Your Professional Strengths
+                Tell Us About Something You Helped Make, Fix, or Organize
               </h3>
               <p className="text-sm text-[#547078] mt-1 italic">
-                &ldquo;Tell me about something you&apos;ve fixed, cooked, built, modded, or organized that came out right. Don&apos;t worry about formal words—just walk me through how you did it.&rdquo;
+                &ldquo;Tell me about something you cooked, fixed, built, or helped out with that went well. Just use your own everyday words.&rdquo;
               </p>
             </div>
             <button
               onClick={() =>
                 speakPrompt(
-                  "Tell me about something you've fixed, cooked, built, modded, or organized that came out right. Don't worry about formal words, just walk me through how you did it."
+                  "Tell me about something you cooked, fixed, built, or helped out with that went well. Just use your own everyday words."
                 )
               }
               className="px-3.5 py-2 rounded-xl bg-[#e8f3f9] hover:bg-[#d8eaf5] border border-[#bddbf0] text-xs font-medium text-[#1c5678] flex items-center gap-1.5 cursor-pointer transition-colors"
             >
-              <Volume2 className="w-4 h-4" /> Read Prompt Aloud
+              <Volume2 className="w-4 h-4" /> Listen to Prompt
             </button>
           </div>
 
-          {/* Preset Story Buttons for Instant Demo Testing */}
+          {/* Preset Everyday Stories */}
           <div>
             <div className="text-xs font-semibold text-[#48656e] uppercase mb-2">
-              Select a Sample Client Narrative (or speak/type below):
+              Tap a Real-Life Example Below (or share your own story):
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {VOICE_PRESETS.map((preset, idx) => (
@@ -593,7 +632,7 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
           <div className="linen-card border border-[#e2d9c8] rounded-2xl p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-semibold uppercase text-[#1b7a6e] flex items-center gap-1.5">
-                <Mic className="w-4 h-4" /> Captured Spoken Narrative (Zero Spelling Required)
+                <Mic className="w-4 h-4" /> Your Everyday Story (No Spelling Worries)
               </span>
               <button
                 disabled={isSynthesizing}
@@ -602,8 +641,8 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
               >
                 <Sparkles className="w-4 h-4" />
                 {isSynthesizing
-                  ? 'Synthesizing Blueprint & Verifying Registry...'
-                  : 'Synthesize Competency Blueprint'}
+                  ? 'Finding Your Strengths...'
+                  : 'Turn My Story Into Job Strengths'}
               </button>
             </div>
             <textarea
@@ -611,23 +650,23 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
               value={session.voice_transcript}
               onChange={(e) => onPatchSession({ voice_transcript: e.target.value })}
               className="w-full bg-white border border-[#dfd8ca] rounded-xl p-3.5 text-sm text-[#163038] focus:outline-none focus:border-[#2a9d8f]"
-              placeholder="Spoken client narrative appears here..."
+              placeholder="Share what you did in plain everyday words..."
             />
           </div>
 
-          {/* Synthesized Technical Competency Blueprint */}
+          {/* Real-World Strengths Found */}
           <div className="bg-gradient-to-r from-[#e6f6f3] to-[#eaf4fa] border border-[#bce5dd] rounded-2xl p-5 space-y-3.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[#1b7a6e]">
-                  Validated Competency Blueprint
+                  Your Real-World Strengths
                 </span>
                 <h4 className="text-base font-bold text-[#163038]">
                   {session.skill_blueprint_json.headline_strength}
                 </h4>
               </div>
               <span className="text-xs font-medium px-3 py-1 rounded-full bg-white/90 text-[#1e5678] border border-[#c2dff0]">
-                Aligned with Canadian NOC Standards
+                Ready for Hands-On Programs
               </span>
             </div>
 
@@ -638,13 +677,13 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                   className="bg-white/95 border border-[#d6ebe6] rounded-xl p-3.5 space-y-1.5 shadow-2xs"
                 >
                   <div className="text-xs text-[#547078]">
-                    <span className="font-semibold text-[#38545c] uppercase text-[10px]">Experience Shared: </span>
+                    <span className="font-semibold text-[#38545c] uppercase text-[10px]">What You Did: </span>
                     {item.what_you_did}
                   </div>
                   <div className="text-sm font-bold text-[#1b7a6e]">
-                    ✓ {item.pro_translation}
+                    ✓Real-World Strength: {item.pro_translation}
                   </div>
-                  <div className="text-[11px] font-mono text-[#2c6e9b] font-medium">
+                  <div className="text-[11px] text-[#2c6e9b] font-medium">
                     {item.noc_domain}
                   </div>
                 </div>
@@ -654,19 +693,19 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
         </div>
       )}
 
-      {/* MODULE 4: THE LOADOUT (TACTILE CARD SORT) */}
+      {/* STEP 4: WORK YOU'D ENJOY */}
       {activeModule === 'LOADOUT_DECK' && (
         <div className="p-6 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
               <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
-                Module 04 • Tactile Environment Card Sort (Synced Live with Handset)
+                Step 4 • Pick What Sounds Good
               </div>
               <h3 className="text-lg font-bold text-[#163038] mt-0.5">
-                The Loadout — Preferred Work Settings &amp; Environments
+                What Kind of Everyday Work Would You Enjoy?
               </h3>
               <p className="text-sm text-[#547078] mt-1">
-                Clients can tap these cards on their companion phone or tablet. Directly weights verified program recommendations.
+                Tap how you feel about each type of activity below. Your choices update your recommended local programs right away.
               </p>
             </div>
           </div>
@@ -681,11 +720,12 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <span className="text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-[#e8f3f9] text-[#246185] border border-[#c6e1f2]">
-                        {card.category.replace('_', ' ')}
+                        Hands-On Option
                       </span>
                       <button
                         onClick={() => speakPrompt(`${card.title}. ${card.tagline}`)}
                         className="text-[#5a757d] hover:text-[#2a9d8f] cursor-pointer"
+                        title="Listen Out Loud"
                       >
                         <Volume2 className="w-4 h-4" />
                       </button>
@@ -721,7 +761,7 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                               : 'bg-white text-[#4c6770] border border-[#e2dcd0] hover:bg-[#f1f8f6]'
                           }`}
                         >
-                          {statusOption}
+                          {LOADOUT_BUTTON_LABELS[statusOption]}
                         </button>
                       );
                     })}
@@ -733,19 +773,19 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
         </div>
       )}
 
-      {/* MODULE 5: THE PRESSURE VALVE */}
+      {/* STEP 5: HELP NEEDED TODAY */}
       {activeModule === 'PRESSURE_VALVE' && (
         <div className="p-6 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#eae4d8] pb-4">
             <div>
               <div className="text-xs font-semibold text-[#2a9d8f] uppercase tracking-wider">
-                Module 05 • Immediate Stabilization &amp; Barrier Relief
+                Step 5 • Practical Support Today
               </div>
               <h3 className="text-lg font-bold text-[#163038] mt-0.5">
-                The Pressure Valve — Let Us Take 1 or 2 Practical Burdens Off Your Plate Today
+                What Practical Help Would Take Stress Off Your Plate Today?
               </h3>
               <p className="text-sm text-[#547078] mt-1">
-                Training or employment works best when immediate logistics are supported first. Tap any item below to include it in your support plan.
+                It’s hard to focus on next steps if you need bus fare, food, boots, or help with forms. Tap 1 or 2 things below so we can cover them for you right away.
               </p>
             </div>
           </div>
@@ -774,7 +814,7 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <ShieldAlert
+                      <HeartHandshake
                         className={`w-5 h-5 ${
                           isActive ? 'text-[#1b7a6e]' : 'text-[#6c868e]'
                         }`}
@@ -786,14 +826,14 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                             : 'bg-white text-[#647f87] border border-[#e2dcd0]'
                         }`}
                       >
-                        {isActive ? 'Included' : 'Select'}
+                        {isActive ? 'Selected' : 'Tap to Add'}
                       </span>
                     </div>
                     <div className="font-bold text-sm text-[#163038]">{block.title}</div>
                     <div className="text-xs text-[#547078] mt-1">{block.subtitle}</div>
                   </div>
-                  <div className="text-[10px] font-mono text-[#2c6e9b] mt-3 pt-2 border-t border-[#e3dccf]">
-                    {block.reliefTag}
+                  <div className="text-[11px] font-medium text-[#1b7a6e] mt-3 pt-2 border-t border-[#e3dccf]">
+                    ✓ {block.helpSummary}
                   </div>
                 </button>
               );

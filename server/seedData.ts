@@ -520,38 +520,38 @@ export const INITIAL_DEMO_SESSION: ClientWorkbookSession = {
     structure_slider: 80,
     bottlenecks: ['Heavy Reading / Spelling Forms', 'Sitting Still at a Desk']
   },
-  voice_transcript: "Last month our community centre cook-off had one of the big propane burners losing flame right when we had 60 plates queued up. I shut the faulty line, pulled the regulator apart to clear a greased jet, and re-staged the prep pans onto the flat-top so nobody waited. Same way I fix up old gaming PCs and audio mixers when a channel drops out—trace the signal or fuel line from the source instead of guessing.",
+  voice_transcript: "Last month at a big family and community dinner, one side of the stove stopped working right when everyone was waiting to eat. I turned off the bad burner, moved the big pots over, and got all the plates served warm on time. I'm also the person friends call when their TV, speaker, or computer isn't working—I just check the cords one by one until it works.",
   skill_blueprint_json: {
-    headline_strength: 'Systems Troubleshooter & Hands-On Builder',
+    headline_strength: 'Calm Problem-Solver & Hands-On Doer',
     extracted_pro_skills: [
       {
-        what_you_did: 'Cleared a blocked propane regulator & re-staged a 60-plate community cook-off under time pressure',
-        pro_translation: 'High-Volume Culinary Line Pacing & Live Equipment Triage',
-        noc_domain: 'NOC 63200 — Commercial Cooks & Kitchen Operations'
+        what_you_did: 'Kept a big dinner moving and got everyone fed on time when a stove burner stopped working',
+        pro_translation: 'Cooking Under Pressure, Kitchen Prep & Staying Calm When Busy',
+        noc_domain: 'Career Path: Kitchen Prep, Line Cook & Food Services'
       },
       {
-        what_you_did: 'Tracing dropped channels on audio mixers and diagnosing old gaming PC hardware',
-        pro_translation: 'Root-Cause Signal Flow Isolation & Hardware Bench Diagnostics',
-        noc_domain: 'NOC 22221 / 52119 — Hardware & Audio-Visual Systems Tech'
+        what_you_did: 'Helping friends fix TVs, speakers, and computers by checking connections step by step',
+        pro_translation: 'Practical Tech Setup, Cable Checking & Everyday Troubleshooting',
+        noc_domain: 'Career Path: Tech Repair, Electronics Bench & Event Setup'
       }
     ],
-    coordinator_private_notes: 'Client demonstrates strong root-cause troubleshooting and spatial logic (4/5), but explicitly flagged spelling/reading friction (1/5). Avoid text-heavy online portals. Route to hands-on trades bridge, culinary lab, or tech makerspace. Coordinator should act as scribe for registration forms.'
+    coordinator_private_notes: 'Great practical problem-solver who learns best by doing things hands-on rather than reading long forms. Match with hands-on kitchen, workshop, or repair programs where staff help fill out any paperwork.'
   },
   completed_modules_json: ['TROUBLESHOOTER', 'SPEC_SHEET', 'VOICE_BLUEPRINT', 'PRESSURE_VALVE'],
-  extracted_likes_tags: ['Commercial Cooking / Line Pacing', 'Hardware & PC Diagnostics', 'Live Audio / Signal Rigging'],
-  extracted_dislikes_tags: ['Heavy Reading / Spelling Forms', 'Call Centre / Desk Cubicle'],
+  extracted_likes_tags: ['Cooking & Kitchen Teamwork', 'Fixing Everyday Tech & Gear', 'Hands-On Projects'],
+  extracted_dislikes_tags: ['Long Paperwork & Forms', 'Sitting at an Office Desk All Day'],
   active_barriers: ['Transit Pass / Compass', 'Paperwork / Scribe Help'],
   loadout_cards: [
-    { id: 'card-culinary', title: 'Commercial Kitchen & Prep Lab', category: 'Culinary_Hospitality', icon: 'Flame', status: 'Lock It In', tagline: 'Fast-paced hands-on cooking, zero desk work' },
-    { id: 'card-hardware', title: 'PC / Server & Audio Hardware Bench', category: 'Tech_Media_Lab', icon: 'Cpu', status: 'Lock It In', tagline: 'Tear down rigs, trace circuits, fix real gear' },
-    { id: 'card-trades', title: 'Millwright & Metal Fabrication Bay', category: 'Trades_Apprenticeship', icon: 'Wrench', status: 'Test Run', tagline: 'Heavy tools, welding, mechanical assembly' },
-    { id: 'card-stage', title: 'Live Concert & Stagehand Rigging', category: 'Tech_Media_Lab', icon: 'Speaker', status: 'Test Run', tagline: 'Set up sound, truss, and lighting for shows' },
-    { id: 'card-hort', title: 'Urban Forestry & Park Trail Crew', category: 'Bridge_Training', icon: 'Trees', status: 'Test Run', tagline: 'Outdoor physical crew, chainsaws, nursery care' },
-    { id: 'card-desk', title: 'Office Data Entry & Paperwork', category: 'Employment_Placement', icon: 'FileText', status: 'Scrap It', tagline: 'Spreadsheets, typing forms, sitting indoors' }
+    { id: 'card-culinary', title: 'Cooking & Community Kitchens', category: 'Culinary_Hospitality', icon: 'Flame', status: 'Lock It In', tagline: 'Making real food with a friendly team—no desk work' },
+    { id: 'card-hardware', title: 'Fixing Computers, Phones & Sound Gear', category: 'Tech_Media_Lab', icon: 'Cpu', status: 'Lock It In', tagline: 'Plug things in, test parts, and bring gear back to life' },
+    { id: 'card-trades', title: 'Hands-On Tools, Bikes & Building', category: 'Trades_Apprenticeship', icon: 'Wrench', status: 'Test Run', tagline: 'Using real tools to build, repair, and put things together' },
+    { id: 'card-stage', title: 'Music, Shows & Event Setup', category: 'Tech_Media_Lab', icon: 'Speaker', status: 'Test Run', tagline: 'Setting up speakers, lights, and stages for live events' },
+    { id: 'card-hort', title: 'Outdoors, Parks & Gardening', category: 'Bridge_Training', icon: 'Trees', status: 'Test Run', tagline: 'Working outside in fresh air caring for parks, plants, and trails' },
+    { id: 'card-desk', title: 'Quiet Indoor Sorting & Checklists', category: 'Employment_Placement', icon: 'FileText', status: 'Scrap It', tagline: 'Calm indoor routine organizing supplies at your own pace' }
   ],
   pinned_program_id: 'prog-surrey-culinary-01',
   pinned_relief_program_id: 'prog-surrey-relief-04',
-  next_micro_step_text: 'Coordinator Marcus calls Sarah (604-584-5811) for Warm Handoff to Surrey Teaching Kitchen + hands over 10x Compass tickets today.',
+  next_micro_step_text: 'Marcus will call Sarah (604-584-5811) with you for a friendly intro to Surrey Teaching Kitchen + give you Compass bus tickets today.',
   coordinator_scribe_required: true,
   active_module_on_canvas: 'TROUBLESHOOTER',
   updated_at: new Date().toISOString()

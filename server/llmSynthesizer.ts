@@ -267,19 +267,24 @@ export async function synthesizeDualAxisBlueprint(
     lower.includes('cook') ||
     lower.includes('food') ||
     lower.includes('burner') ||
+    lower.includes('stove') ||
     lower.includes('kitchen') ||
     lower.includes('meal') ||
+    lower.includes('dinner') ||
     lower.includes('prep')
   ) {
     skills.push({
-      what_you_did: 'Managed high-volume cooking / prep line and isolated equipment bottlenecks under time pressure',
-      pro_translation: 'Commercial Line Pacing, Thermal Triage & FoodSafe Prep Logistics',
-      noc_domain: 'NOC 63200 — Cooks & Commercial Kitchen Operations'
+      what_you_did: 'Kept a big meal moving and got everyone fed on time when things got busy',
+      pro_translation: 'Cooking Under Pressure, Kitchen Prep & Staying Calm in a Rush',
+      noc_domain: 'Good Fit: Community Kitchens, Line Cook & Food Prep'
     });
   }
 
   if (
     lower.includes('pc') ||
+    lower.includes('computer') ||
+    lower.includes('tv') ||
+    lower.includes('speaker') ||
     lower.includes('game') ||
     lower.includes('gaming') ||
     lower.includes('server') ||
@@ -287,29 +292,33 @@ export async function synthesizeDualAxisBlueprint(
     lower.includes('mixer') ||
     lower.includes('signal') ||
     lower.includes('cable') ||
+    lower.includes('cord') ||
     lower.includes('sound')
   ) {
     skills.push({
-      what_you_did: 'Traced dead signal paths, modded/repaired PC hardware, or troubleshot live audio gear',
-      pro_translation: 'Root-Cause Signal Flow Isolation & Hardware Bench Diagnostics',
-      noc_domain: 'NOC 22221 / 52119 — Hardware & Audio-Visual Systems Tech'
+      what_you_did: 'Checked cords, connections, and parts step-by-step to get electronics or sound working',
+      pro_translation: 'Practical Tech Setup, Equipment Testing & Everyday Problem-Solving',
+      noc_domain: 'Good Fit: Tech Repair Bench, Sound/Stage Setup & Electronics'
     });
   }
 
   if (
     lower.includes('bike') ||
+    lower.includes('chain') ||
+    lower.includes('brake') ||
     lower.includes('car') ||
     lower.includes('engine') ||
     lower.includes('wrench') ||
+    lower.includes('tool') ||
     lower.includes('weld') ||
     lower.includes('build') ||
     lower.includes('built') ||
     lower.includes('fix')
   ) {
     skills.push({
-      what_you_did: 'Disassembled mechanical assemblies, isolated worn tolerances, and rebuilt working hardware',
-      pro_translation: 'Mechanical Fault Isolation, Tool Fluency & Spatial Assembly',
-      noc_domain: 'NOC 72400 / 74204 — Millwright, Fabrication & Mechanical Trades'
+      what_you_did: 'Used hands-on tools to take parts apart, clean or tighten them, and get things working again',
+      pro_translation: 'Hands-On Mechanical Repair, Tool Skills & Building Things',
+      noc_domain: 'Good Fit: Bike & Repair Shops, Trades Foundations & Workshops'
     });
   }
 
@@ -319,20 +328,22 @@ export async function synthesizeDualAxisBlueprint(
     lower.includes('tree') ||
     lower.includes('outdoor') ||
     lower.includes('trail') ||
+    lower.includes('rain') ||
+    lower.includes('shed') ||
     lower.includes('yard')
   ) {
     skills.push({
-      what_you_did: 'Maintained outdoor gardens, site layout, and physical grounds care',
-      pro_translation: 'Horticultural Site Care, Spatial Grading & Field Stamina',
-      noc_domain: 'NOC 85121 — Landscaping, Urban Forestry & Nursery Operations'
+      what_you_did: 'Cared for outdoor spaces, cleared pathways, and organized tools with a team',
+      pro_translation: 'Outdoor Teamwork, Grounds Care & Staying Active Outside',
+      noc_domain: 'Good Fit: Parks Crew, Landscaping & Community Gardens'
     });
   }
 
   if (skills.length === 0) {
     skills.push({
-      what_you_did: transcript.slice(0, 95) || 'Hands-on troubleshooting and practical task execution',
-      pro_translation: 'Applied Systems Troubleshooting & Practical Shop Execution',
-      noc_domain: 'NOC 72400 / 63200 — Applied Trades & Technical Foundations'
+      what_you_did: transcript.slice(0, 95) || 'Stepped in to figure out a practical problem and get the job done',
+      pro_translation: 'Practical Problem-Solving & Getting Things Done Hands-On',
+      noc_domain: 'Good Fit: Hands-On Workshops, Trades & Community Programs'
     });
   }
 
@@ -371,18 +382,18 @@ export async function synthesizeDualAxisBlueprint(
 
   const headline =
     problemSolvingComplexity >= 4 && textAdminTolerance <= 2
-      ? 'Systems Troubleshooter & Hands-On Specialist (Quadrant A)'
+      ? 'Calm Problem-Solver & Hands-On Doer'
       : problemSolvingComplexity >= 4 && textAdminTolerance >= 3
-      ? 'Systems & Technical Lead (Quadrant B)'
+      ? 'Practical Planner & Tech Problem-Solver'
       : textAdminTolerance <= 2
-      ? 'Practical Hands-On Builder & Crew Specialist (Quadrant C)'
-      : 'Structured Operations & Systems Coordinator (Quadrant D)';
+      ? 'Steady Hands-On Builder & Team Helper'
+      : 'Organized Step-by-Step Helper';
 
-  const coordinatorNotes = `Client demonstrates strong ${session.troubleshooter_selections.solving_style.toLowerCase()} and practical systems logic (${problemSolvingComplexity}/5), independently decoupled from text/form tolerance (${textAdminTolerance}/5). ${
+  const coordinatorNotes = `Great practical problem-solver who learns best by doing things hands-on. ${
     supportsHighSkillLowText
-      ? 'Avoid text-heavy online portals or written entrance exams. Route to hands-on shop floor, culinary lab, or makerspace with oral/practical assessment.'
-      : 'Matches structured cohort with clear checklists.'
-  } ${needsScribe ? 'Coordinator should act as scribe for 1-page intake.' : ''}`;
+      ? 'Skip long online forms or written tests—connect directly with a hands-on kitchen, workshop, or outdoor crew.'
+      : 'Matches well with a steady, organized program with clear daily steps.'
+  } ${needsScribe ? 'Staff will sit down and help fill out the short sign-up sheet together.' : ''}`;
 
   return {
     client_facing_blueprint: {

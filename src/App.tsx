@@ -5,12 +5,8 @@ import {
   Smartphone,
   Columns,
   RotateCcw,
-  Cpu,
   Database,
-  Radio,
-  BrainCircuit,
-  FileCode2,
-  CheckCircle2
+  Sparkles
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
@@ -33,7 +29,6 @@ export function App() {
   const [enableThinking, setEnableThinking] = useState<boolean>(false);
   const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
   const [socketConnected, setSocketConnected] = useState<boolean>(false);
-  const [lastSyncSource, setLastSyncSource] = useState<string>('initial');
   const [telemetry, setTelemetry] = useState<{
     provider_used: string;
     endpoint_url: string;
@@ -59,7 +54,6 @@ export function App() {
     sock.on('session:updated', (payload: any) => {
       if (payload.session) setSession(payload.session);
       if (payload.ddl) setDdl(payload.ddl);
-      if (payload.source) setLastSyncSource(payload.source);
       if (payload.synthesizer_telemetry) setTelemetry(payload.synthesizer_telemetry);
     });
 
@@ -129,7 +123,7 @@ export function App() {
       <div className="min-h-screen flex items-center justify-center bg-[#f6f3ec] text-[#1f7a6e] font-medium text-sm">
         <div className="clinical-card border border-[#cde8e2] rounded-2xl px-6 py-4 flex items-center gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-[#2a9d8f] animate-ping" />
-          Initializing Future Forward & Beyond Clinical Co-Pilot Suite...
+          Loading Future Forward &amp; Beyond...
         </div>
       </div>
     );
@@ -150,18 +144,18 @@ export function App() {
                   Future Forward &amp; Beyond
                 </h1>
                 <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#e5f6f3] text-[#1b7a6e] border border-[#bce5dd]">
-                  Clinical &amp; Vocational Co-Pilot v4.0
+                  Real-World Strengths &amp; Local Support Guide
                 </span>
               </div>
               <p className="text-xs text-[#557078]">
-                Multi-Barrier Navigator • Dual-Axis Competency Assessment • Verified Provincial Registry
+                Simple, practical ways to match your everyday skills with welcoming local programs
               </p>
             </div>
           </div>
 
-          {/* Real-Time Status & Controls */}
+          {/* Simple Controls */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* WebSocket Sync Status Badge */}
+            {/* Sync Status Pill */}
             <div className="px-3 py-1.5 rounded-xl bg-[#f7f4ed] border border-[#e3dccf] text-xs flex items-center gap-2 text-[#335059]">
               <span
                 className={`w-2 h-2 rounded-full ${
@@ -169,22 +163,22 @@ export function App() {
                 }`}
               />
               <span className="font-medium">
-                Live Sync: #{session.session_id} <span className="text-[#69838b]">({lastSyncSource})</span>
+                Connected • {session.client_alias}
               </span>
             </div>
 
-            {/* LLM Reasoning Toggle (`</think>` Assistant Prefill Control) */}
+            {/* Response Speed Toggle */}
             <button
               onClick={() => setEnableThinking(!enableThinking)}
-              title="Controls whether local Qwen/DeepSeek LLM uses </think> assistant prefill for <1s instant synthesis"
+              title="Switch between Instant Match and Deep Match"
               className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
                 enableThinking
                   ? 'bg-[#e8f3f9] border-[#9ec8e2] text-[#1e5678]'
                   : 'bg-[#e6f6f3] border-[#b5e4da] text-[#1b7a6e]'
               }`}
             >
-              <BrainCircuit className="w-3.5 h-3.5" />
-              {enableThinking ? 'Deep Clinical Reasoning: ON' : 'Instant Synthesis (<1s): ON'}
+              <Sparkles className="w-3.5 h-3.5" />
+              {enableThinking ? 'Detailed Match' : 'Quick Match'}
             </button>
 
             {/* View Switcher */}
@@ -197,7 +191,7 @@ export function App() {
                     : 'text-[#4c6770] hover:text-[#163038]'
                 }`}
               >
-                <Columns className="w-3.5 h-3.5" /> Co-Pilot Suite
+                <Columns className="w-3.5 h-3.5" /> Side-by-Side View
               </button>
               <button
                 onClick={() => setDeviceMode('tablet_only')}
@@ -207,7 +201,7 @@ export function App() {
                     : 'text-[#4c6770] hover:text-[#163038]'
                 }`}
               >
-                <Tablet className="w-3.5 h-3.5" /> Practitioner Tablet
+                <Tablet className="w-3.5 h-3.5" /> Shared Screen
               </button>
               <button
                 onClick={() => setDeviceMode('phone_only')}
@@ -217,7 +211,7 @@ export function App() {
                     : 'text-[#4c6770] hover:text-[#163038]'
                 }`}
               >
-                <Smartphone className="w-3.5 h-3.5" /> Client Companion
+                <Smartphone className="w-3.5 h-3.5" /> Phone Takeaway
               </button>
               <button
                 onClick={() => setDeviceMode('architecture_ddl')}
@@ -227,14 +221,14 @@ export function App() {
                     : 'text-[#4c6770] hover:text-[#163038]'
                 }`}
               >
-                <Database className="w-3.5 h-3.5" /> Verified Registry
+                <Database className="w-3.5 h-3.5" /> All Local Programs
               </button>
             </div>
 
             <button
               onClick={handleResetDemo}
               className="p-2 rounded-xl bg-[#f7f4ed] hover:bg-[#ebe4d6] border border-[#e2d9c8] text-[#4a656d] cursor-pointer transition-colors"
-              title="Reset Session #A842 (Stratus)"
+              title="Start Fresh"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -242,14 +236,14 @@ export function App() {
         </div>
       </header>
 
-      {/* Telemetry Banner if Synthesizer Ran */}
+      {/* Friendly Banner if Story Was Updated */}
       {telemetry && (
         <div className="bg-[#e6f6f3] border-b border-[#bce5dd] px-6 py-2 text-xs text-[#185e55] flex flex-wrap items-center justify-between gap-2">
           <span>
-            ✓ Dual-Axis Clinical Synthesizer completed via <strong>{telemetry.provider_used}</strong> ({telemetry.endpoint_url})
+            ✓ Updated your real-world strengths and matched open local programs
           </span>
-          <span className="font-mono text-[11px]">
-            Fast Prefill: {telemetry.think_suppressed ? 'Active' : 'Standard'} • Response Time: {telemetry.latency_ms}ms
+          <span className="text-[11px]">
+            Updated in {telemetry.latency_ms}ms
           </span>
         </div>
       )}
@@ -258,7 +252,7 @@ export function App() {
       <main className="flex-1 max-w-[1680px] w-full mx-auto p-4 lg:p-6">
         {deviceMode === 'split_copilot' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left 8 Cols: Coordinator Shared Tablet Canvas */}
+            {/* Left 8 Cols: Shared Workbook Screen */}
             <div className="lg:col-span-8 xl:col-span-9 space-y-6">
               <WorkbookModulesCanvas
                 session={session}
@@ -277,7 +271,7 @@ export function App() {
             <div className="lg:col-span-4 xl:col-span-3 lg:sticky lg:top-22">
               <div className="text-center mb-2.5">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[#237a6f] bg-[#e6f6f3] border border-[#bce5dd] px-3 py-1 rounded-full">
-                  Live Client Companion Handset
+                  Pocket Takeaway Phone View
                 </span>
               </div>
               <ClientCompanionPhone
@@ -317,96 +311,67 @@ export function App() {
 
         {deviceMode === 'architecture_ddl' && (
           <div className="space-y-6">
-            <div className="clinical-card border border-[#e2dcd0] rounded-2xl p-6 space-y-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#2a9d8f]">
-                Provincial &amp; Federal Data Integrations • HSDS v3.0 Registry
-              </div>
-              <h2 className="text-lg font-bold text-[#163038]">
-                Connected Provincial &amp; Open Referral Health/Social Data Feeds
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  {
-                    name: 'BC211 / 211 Canada API',
-                    proto: 'Open Referral HSDS v3.0 JSON & AIRS XML',
-                    desc: '150,000+ community, shelter, nutrition, outreach, and foundational programs across BC & Canada.'
-                  },
-                  {
-                    name: 'BC Data Catalogue API',
-                    proto: 'CKAN REST API (catalogue.data.gov.bc.ca)',
-                    desc: 'Live locations and metadata for WorkBC centres, skills training grants, transit hubs, and health clinics.'
-                  },
-                  {
-                    name: 'NOC & Job Bank Canada API',
-                    proto: 'Open Government CKAN API (open.canada.ca)',
-                    desc: 'Maps extracted practical skills to formal 5-digit NOC codes, regional wage rates, and entry pathways.'
-                  },
-                  {
-                    name: 'EducationPlannerBC & SkilledTradesBC',
-                    proto: 'XML/JSON Feeds & Scheduled Sync',
-                    desc: 'Post-secondary micro-credentials, Red Seal foundation programs, tuition waivers, and oral exam accommodations.'
-                  }
-                ].map((feed, i) => (
-                  <div
-                    key={i}
-                    className="linen-card border border-[#e3dccf] rounded-2xl p-4 space-y-1.5"
-                  >
-                    <div className="text-xs font-bold text-[#1b7a6e]">
-                      {feed.name}
-                    </div>
-                    <div className="text-[11px] font-mono text-[#2c6e9b]">{feed.proto}</div>
-                    <p className="text-xs text-[#4f6a72] leading-relaxed">{feed.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <div className="clinical-card border border-[#e2dcd0] rounded-2xl p-6 space-y-3">
               <h3 className="text-base font-bold text-[#163038]">
-                Live Coordinator DDL Verification View (coordinator_dual_axis_check)
+                All Verified Community Programs &amp; Practical Supports
               </h3>
+              <p className="text-xs text-[#547078]">
+                Every program listed below is checked directly with local coordinators so you know what is open and what support is included.
+              </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-[#e2dcd0] bg-[#f7f4ed] text-[#4a656d] font-semibold">
-                      <th className="py-3 px-3.5 rounded-tl-xl">211 Registry ID</th>
-                      <th className="py-3 px-3.5">Program &amp; Clinical/Community Provider</th>
-                      <th className="py-3 px-3.5">Municipality</th>
-                      <th className="py-3 px-3.5">Intake Pathway</th>
-                      <th className="py-3 px-3.5">Hands-On / Low-Text</th>
-                      <th className="py-3 px-3.5">Oral Assessment</th>
-                      <th className="py-3 px-3.5">Zero-ID Start</th>
-                      <th className="py-3 px-3.5 rounded-tr-xl">Included Supports</th>
+                      <th className="py-3 px-3.5 rounded-tl-xl">Program &amp; Community Partner</th>
+                      <th className="py-3 px-3.5">City</th>
+                      <th className="py-3 px-3.5">How to Join</th>
+                      <th className="py-3 px-3.5">Hands-On Learning</th>
+                      <th className="py-3 px-3.5">No Written Test</th>
+                      <th className="py-3 px-3.5">No ID Needed to Start</th>
+                      <th className="py-3 px-3.5 rounded-tr-xl">Free Support Included</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#ebe5d9]">
                     {[...ddl.immediate_relief_matches, ...ddl.primary_matches].map((p) => (
-                      <tr key={p.program_id} className="hover:bg-[#f6fbf9] transition-colors">
-                        <td className="py-3 px-3.5 font-mono text-[#2c6e9b] font-medium">
-                          {p.external_211_id}
-                        </td>
+                      <tr key={p.program_id} className="hover:bg-[#f2faf8] transition-colors">
                         <td className="py-3 px-3.5">
                           <div className="font-bold text-[#163038]">{p.program_name}</div>
-                          <div className="text-[#5a747c]">{p.organization_name}</div>
+                          <div className="text-[#5a757d]">{p.organization_name}</div>
                         </td>
-                        <td className="py-3 px-3.5 font-medium text-[#2c4a52]">{p.municipality}</td>
+                        <td className="py-3 px-3.5 font-medium text-[#2c525c]">{p.municipality}</td>
+                        <td className="py-3 px-3.5 text-[#2c6e9b] font-medium">
+                          {p.intake_type.replace('_', ' ')}
+                        </td>
                         <td className="py-3 px-3.5">
-                          <span className="px-2.5 py-0.5 rounded-full bg-[#e6f6f3] text-[#1b7a6e] border border-[#bce5dd] font-medium">
-                            {p.intake_type.replace('_', ' ')}
-                          </span>
+                          {p.supports_high_skill_low_text ? (
+                            <span className="text-[#1b7a6e] font-semibold">✓ Yes</span>
+                          ) : (
+                            <span className="text-[#789098]">Reading/List Based</span>
+                          )}
                         </td>
-                        <td className="py-3 px-3.5 font-mono text-[#1b7a6e]">
-                          {p.supports_high_skill_low_text ? 'Yes' : 'Standard'}
+                        <td className="py-3 px-3.5">
+                          {p.offers_oral_or_practical_testing ? (
+                            <span className="text-[#23638a] font-semibold">✓ Practical / Spoken</span>
+                          ) : (
+                            <span className="text-[#789098]">Standard</span>
+                          )}
                         </td>
-                        <td className="py-3 px-3.5 font-mono text-[#2c6e9b]">
-                          {p.offers_oral_or_practical_testing ? 'Available' : 'Written'}
+                        <td className="py-3 px-3.5">
+                          {!p.requires_government_id ? (
+                            <span className="text-[#1b7a6e] font-semibold">✓ Start Right Away</span>
+                          ) : (
+                            <span className="text-[#b86b52]">ID Needed</span>
+                          )}
                         </td>
-                        <td className="py-3 px-3.5 font-mono text-[#335059]">
-                          {!p.requires_government_id ? 'Yes' : 'ID Required'}
-                        </td>
-                        <td className="py-3 px-3.5 font-medium text-[#1b7a6e]">
-                          {p.provides_transit_tickets ? 'Compass Pass ' : ''}
-                          {p.provides_gear_or_boots ? '• Work Gear' : ''}
+                        <td className="py-3 px-3.5 text-[#37535b]">
+                          {[
+                            p.provides_transit_tickets && 'Bus Tickets',
+                            p.provides_food_or_meals && 'Free Meals',
+                            p.provides_living_stipend && 'Training Pay',
+                            p.provides_gear_or_boots && 'Work Boots/Gear'
+                          ]
+                            .filter(Boolean)
+                            .join(' • ')}
                         </td>
                       </tr>
                     ))}
@@ -422,3 +387,4 @@ export function App() {
 }
 
 export default App;
+

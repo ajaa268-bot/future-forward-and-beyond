@@ -23,27 +23,22 @@
         "Sitting Still at a Desk"
       ]
     },
-    "voice_transcript": "Fixed a dead channel on a stage mixer and ran a 60-plate kitchen rush",
+    "voice_transcript": "Last month at a big family and community dinner, one side of the stove stopped working right when everyone was waiting to eat. I turned off the bad burner, moved the big pots over, and got all the plates served warm on time. I'm also the person friends call when their TV, speaker, or computer isn't working—I just check the cords one by one until it works.",
     "skill_blueprint_json": {
-      "headline_strength": "Systems Troubleshooter & Hands-On Specialist (Quadrant A)",
+      "headline_strength": "Calm Problem-Solver & Hands-On Doer",
       "extracted_pro_skills": [
         {
-          "what_you_did": "Managed high-volume cooking / prep line and isolated equipment bottlenecks under time pressure",
-          "pro_translation": "Commercial Line Pacing, Thermal Triage & FoodSafe Prep Logistics",
-          "noc_domain": "NOC 63200 — Cooks & Commercial Kitchen Operations"
+          "what_you_did": "Kept a big dinner moving and got everyone fed on time when a stove burner stopped working",
+          "pro_translation": "Cooking Under Pressure, Kitchen Prep & Staying Calm When Busy",
+          "noc_domain": "Career Path: Kitchen Prep, Line Cook & Food Services"
         },
         {
-          "what_you_did": "Traced dead signal paths, modded/repaired PC hardware, or troubleshot live audio gear",
-          "pro_translation": "Root-Cause Signal Flow Isolation & Hardware Bench Diagnostics",
-          "noc_domain": "NOC 22221 / 52119 — Hardware & Audio-Visual Systems Tech"
-        },
-        {
-          "what_you_did": "Disassembled mechanical assemblies, isolated worn tolerances, and rebuilt working hardware",
-          "pro_translation": "Mechanical Fault Isolation, Tool Fluency & Spatial Assembly",
-          "noc_domain": "NOC 72400 / 74204 — Millwright, Fabrication & Mechanical Trades"
+          "what_you_did": "Helping friends fix TVs, speakers, and computers by checking connections step by step",
+          "pro_translation": "Practical Tech Setup, Cable Checking & Everyday Troubleshooting",
+          "noc_domain": "Career Path: Tech Repair, Electronics Bench & Event Setup"
         }
       ],
-      "coordinator_private_notes": "Client demonstrates strong root-cause isolation and practical systems logic (4/5), independently decoupled from text/form tolerance (1/5). Avoid text-heavy online portals or written entrance exams. Route to hands-on shop floor, culinary lab, or makerspace with oral/practical assessment. Coordinator should act as scribe for 1-page intake."
+      "coordinator_private_notes": "Great practical problem-solver who learns best by doing things hands-on rather than reading long forms. Match with hands-on kitchen, workshop, or repair programs where staff help fill out any paperwork."
     },
     "completed_modules_json": [
       "TROUBLESHOOTER",
@@ -52,13 +47,13 @@
       "PRESSURE_VALVE"
     ],
     "extracted_likes_tags": [
-      "Commercial Cooking / Line Pacing",
-      "Hardware & PC Diagnostics",
-      "Live Audio / Signal Rigging"
+      "Cooking & Kitchen Teamwork",
+      "Fixing Everyday Tech & Gear",
+      "Hands-On Projects"
     ],
     "extracted_dislikes_tags": [
-      "Heavy Reading / Spelling Forms",
-      "Call Centre / Desk Cubicle"
+      "Long Paperwork & Forms",
+      "Sitting at an Office Desk All Day"
     ],
     "active_barriers": [
       "Transit Pass / Compass",
@@ -67,58 +62,58 @@
     "loadout_cards": [
       {
         "id": "card-culinary",
-        "title": "Commercial Kitchen & Prep Lab",
+        "title": "Cooking & Community Kitchens",
         "category": "Culinary_Hospitality",
         "icon": "Flame",
         "status": "Lock It In",
-        "tagline": "Fast-paced hands-on cooking, zero desk work"
+        "tagline": "Making real food with a friendly team—no desk work"
       },
       {
         "id": "card-hardware",
-        "title": "PC / Server & Audio Hardware Bench",
+        "title": "Fixing Computers, Phones & Sound Gear",
         "category": "Tech_Media_Lab",
         "icon": "Cpu",
         "status": "Lock It In",
-        "tagline": "Tear down rigs, trace circuits, fix real gear"
+        "tagline": "Plug things in, test parts, and bring gear back to life"
       },
       {
         "id": "card-trades",
-        "title": "Millwright & Metal Fabrication Bay",
+        "title": "Hands-On Tools, Bikes & Building",
         "category": "Trades_Apprenticeship",
         "icon": "Wrench",
         "status": "Test Run",
-        "tagline": "Heavy tools, welding, mechanical assembly"
+        "tagline": "Using real tools to build, repair, and put things together"
       },
       {
         "id": "card-stage",
-        "title": "Live Concert & Stagehand Rigging",
+        "title": "Music, Shows & Event Setup",
         "category": "Tech_Media_Lab",
         "icon": "Speaker",
         "status": "Test Run",
-        "tagline": "Set up sound, truss, and lighting for shows"
+        "tagline": "Setting up speakers, lights, and stages for live events"
       },
       {
         "id": "card-hort",
-        "title": "Urban Forestry & Park Trail Crew",
+        "title": "Outdoors, Parks & Gardening",
         "category": "Bridge_Training",
         "icon": "Trees",
         "status": "Test Run",
-        "tagline": "Outdoor physical crew, chainsaws, nursery care"
+        "tagline": "Working outside in fresh air caring for parks, plants, and trails"
       },
       {
         "id": "card-desk",
-        "title": "Office Data Entry & Paperwork",
+        "title": "Quiet Indoor Sorting & Checklists",
         "category": "Employment_Placement",
         "icon": "FileText",
         "status": "Scrap It",
-        "tagline": "Spreadsheets, typing forms, sitting indoors"
+        "tagline": "Calm indoor routine organizing supplies at your own pace"
       }
     ],
     "pinned_program_id": "prog-surrey-culinary-01",
     "pinned_relief_program_id": "prog-surrey-relief-04",
-    "next_micro_step_text": "Warm Handoff to Sarah Jenkins (Kitchen Lead) (604-584-5811 / culinary-bridge@options.bc.ca) at Community Culinary & FoodSafe Bridge Cohort",
+    "next_micro_step_text": "Marcus will call Sarah (604-584-5811) with you for a friendly intro to Surrey Teaching Kitchen + give you Compass bus tickets today.",
     "coordinator_scribe_required": true,
     "active_module_on_canvas": "TROUBLESHOOTER",
-    "updated_at": "2026-10-26T19:52:40.733Z"
+    "updated_at": "2026-10-26T21:32:56.934Z"
   }
 ]
