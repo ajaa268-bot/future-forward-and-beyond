@@ -1,11 +1,11 @@
 # Multi-stage Dockerfile for Railway (Project: 9821be45-444b-4d47-b79e-2b811be6851f / Domain: https://plauxie.life)
-FROM node:22-alpine AS base
+FROM node:22-bookworm-slim AS base
 WORKDIR /app
 
 # Install dependencies
 FROM base AS dependencies
 COPY package.json package-lock.json ./
-RUN npm install --no-audit --no-fund
+RUN npm install --include=optional --no-audit --no-fund
 
 # Build Vite + React + Tailwind frontend
 FROM base AS build
