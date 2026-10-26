@@ -36,6 +36,13 @@ type PartnerFilter =
   | 'ALL'
   | 'OPTIONS_PLUS'
   | 'SOURCES_BC'
+  | 'LOCAL_SOCIETIES'
+  | 'HOUSING_HOMELESS'
+  | 'SUBSIDIES_LEISURE'
+  | 'PHYSICAL_BARRIERS'
+  | 'MENTAL_HEALTH_CRISIS'
+  | 'RECOVERY_12STEP'
+  | 'LAW_FIRST_RESPONDERS'
   | 'SCHOOLS'
   | 'FOOD_PROGRAMS'
   | 'HANDS_ON_WORK';
@@ -196,6 +203,118 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
     }
     if (partnerFilter === 'SOURCES_BC') {
       return haystack.includes('sources');
+    }
+    if (partnerFilter === 'LOCAL_SOCIETIES') {
+      return (
+        haystack.includes('society') ||
+        haystack.includes('diversecity') ||
+        haystack.includes('pics') ||
+        haystack.includes('lcss') ||
+        haystack.includes('purpose') ||
+        haystack.includes('ugm') ||
+        haystack.includes('first united') ||
+        haystack.includes('lookout') ||
+        haystack.includes('phoenix') ||
+        haystack.includes('uniti') ||
+        haystack.includes('semiahmoo') ||
+        haystack.includes('posabilities') ||
+        haystack.includes('efry') ||
+        haystack.includes('atira') ||
+        haystack.includes('options') ||
+        haystack.includes('sources')
+      );
+    }
+    if (partnerFilter === 'HOUSING_HOMELESS') {
+      return (
+        haystack.includes('homeless') ||
+        haystack.includes('shelter') ||
+        haystack.includes('housing') ||
+        haystack.includes('rent') ||
+        haystack.includes('lookout') ||
+        haystack.includes('raincity') ||
+        haystack.includes('phoenix') ||
+        haystack.includes('covenant') ||
+        haystack.includes('efry') ||
+        haystack.includes('atira')
+      );
+    }
+    if (partnerFilter === 'SUBSIDIES_LEISURE') {
+      return (
+        haystack.includes('subsidy') ||
+        haystack.includes('subsidies') ||
+        haystack.includes('pwd') ||
+        haystack.includes('disability') ||
+        haystack.includes('rent bank') ||
+        haystack.includes('rap') ||
+        haystack.includes('safer') ||
+        haystack.includes('leisure') ||
+        haystack.includes('pool') ||
+        haystack.includes('bus pass') ||
+        haystack.includes('wage subsidy') ||
+        prog.provides_living_stipend
+      );
+    }
+    if (partnerFilter === 'PHYSICAL_BARRIERS') {
+      return (
+        haystack.includes('physical') ||
+        haystack.includes('mobility') ||
+        haystack.includes('wheelchair') ||
+        haystack.includes('neil squire') ||
+        haystack.includes('spinal') ||
+        haystack.includes('disability alliance') ||
+        haystack.includes('dabc') ||
+        haystack.includes('handydart') ||
+        haystack.includes('ergonomic') ||
+        haystack.includes('uniti') ||
+        haystack.includes('posabilities') ||
+        haystack.includes('leisure')
+      );
+    }
+    if (partnerFilter === 'MENTAL_HEALTH_CRISIS') {
+      return (
+        haystack.includes('mental health') ||
+        haystack.includes('crisis') ||
+        haystack.includes('cmha') ||
+        haystack.includes('clubhouse') ||
+        haystack.includes('stepping stone') ||
+        haystack.includes('foundry') ||
+        haystack.includes('pact') ||
+        haystack.includes('cares') ||
+        haystack.includes('9-8-8') ||
+        haystack.includes('counseling') ||
+        haystack.includes('peer support')
+      );
+    }
+    if (partnerFilter === 'RECOVERY_12STEP') {
+      return (
+        haystack.includes('anonymous') ||
+        haystack.includes('12 step') ||
+        haystack.includes('recovery') ||
+        haystack.includes('alcoholics') ||
+        haystack.includes('narcotics') ||
+        haystack.includes('cocaine') ||
+        haystack.includes('coda') ||
+        haystack.includes('phoenix') ||
+        haystack.includes('ugm')
+      );
+    }
+    if (partnerFilter === 'LAW_FIRST_RESPONDERS') {
+      return (
+        haystack.includes('legal') ||
+        haystack.includes('law') ||
+        haystack.includes('lawyer') ||
+        haystack.includes('eviction') ||
+        haystack.includes('tenant') ||
+        haystack.includes('police') ||
+        haystack.includes('fire') ||
+        haystack.includes('ambulance') ||
+        haystack.includes('paramedic') ||
+        haystack.includes('car 67') ||
+        haystack.includes('car 87') ||
+        haystack.includes('9-1-1') ||
+        haystack.includes('8-1-1') ||
+        haystack.includes('victim')
+      );
     }
     if (partnerFilter === 'SCHOOLS') {
       return (
@@ -465,6 +584,46 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
             </div>
           </div>
 
+          {/* 24/7 Emergency, Crisis, Shelter, Police/Fire/Ambulance & AA/NA/CA/CoDA Quick Access */}
+          <div className="bg-gradient-to-r from-[#e5f5f2] via-[#eaf4fa] to-[#f4f0e6] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#145e54] flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-[#1ca796]" /> 24/7 Immediate Crisis, Shelter, First Responders &amp; Peer Recovery Lines
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  speakText(
+                    '24/7 Free Support Lines. Emergency Police, Fire, or Ambulance: call 9 1 1. Free 24/7 Nurse and HealthLink: call 8 1 1. Shelter beds and street help tonight: call or text 2 1 1. Suicide and mental health crisis line: call or text 9 8 8, or call 310-6789, or Fraser Health Crisis Line at 604-951-8855. Alcoholics Anonymous 24/7 line: 604-434-3933. Narcotics Anonymous: 604-873-1018. Cocaine Anonymous: 604-662-8500. CoDA and Al-Anon: 604-688-5588.'
+                  )
+                }
+                className="text-[11px] font-semibold text-[#1b7a6e] hover:text-[#12323b] bg-white px-2.5 py-1 rounded-lg border border-[#bce5dd] flex items-center gap-1 cursor-pointer"
+              >
+                <Volume2 className="w-3.5 h-3.5" /> Read Numbers Out Loud
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#cde8e2]">
+                <div className="font-bold text-[#14343d]">Emergency, Nurse &amp; Shelter Tonight</div>
+                <div className="text-[#2c525c] mt-0.5">
+                  <strong>9-1-1</strong> (Police/Fire/Ambulance) • <strong>8-1-1</strong> (24/7 Nurse) • <strong>2-1-1</strong> (Shelter Beds)
+                </div>
+              </div>
+              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#c5e0f0]">
+                <div className="font-bold text-[#164966]">24/7 Mental Health &amp; Car 67/87</div>
+                <div className="text-[#2c525c] mt-0.5">
+                  <strong>9-8-8</strong> or <strong>310-6789</strong> • Fraser Crisis: <strong>604-951-8855</strong> • Car 67: <strong>604-599-0502</strong>
+                </div>
+              </div>
+              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#dfd4c0]">
+                <div className="font-bold text-[#1b5e55]">AA, NA, CA, CoDA &amp; Legal Aid</div>
+                <div className="text-[#2c525c] mt-0.5">
+                  AA: <strong>604-434-3933</strong> • NA: <strong>604-873-1018</strong> • CA: <strong>604-662-8500</strong> • Legal: <strong>604-408-2172</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Search Bar & Quick Partner Filter Buttons */}
           <div className="linen-card border border-[#e3dccf] rounded-2xl p-3.5 space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
@@ -474,7 +633,7 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search Options+, Sources BC, KPU, BCIT, food banks, boots, welding, cooking..."
+                  placeholder="Search Options+, Sources BC, homeless shelter, PWD subsidy, Leisure Pass, AA, NA, CA, CoDA, legal aid, Car 67, food banks..."
                   className="w-full bg-white border border-[#dcd4c4] rounded-xl pl-9 pr-8 py-2 text-xs text-[#163038] placeholder:text-[#6c858d] focus:outline-none focus:border-[#2a9d8f]"
                 />
                 {searchQuery && (
@@ -504,10 +663,17 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
               {(
                 [
                   { id: 'ALL', label: 'All Options' },
-                  { id: 'OPTIONS_PLUS', label: 'Options+ (Options Community Services)' },
+                  { id: 'HOUSING_HOMELESS', label: 'Homelessness & Safe Shelter' },
+                  { id: 'SUBSIDIES_LEISURE', label: 'Subsidies, PWD & Free Leisure Pass' },
+                  { id: 'PHYSICAL_BARRIERS', label: 'Physical Barriers & Mobility' },
+                  { id: 'MENTAL_HEALTH_CRISIS', label: 'Mental Health & 24/7 Crisis' },
+                  { id: 'RECOVERY_12STEP', label: 'AA / NA / CA / CoDA Recovery' },
+                  { id: 'LOCAL_SOCIETIES', label: 'All Local Societies' },
+                  { id: 'LAW_FIRST_RESPONDERS', label: 'Law, Police, Fire & Ambulance' },
+                  { id: 'OPTIONS_PLUS', label: 'Options+' },
                   { id: 'SOURCES_BC', label: 'Sources BC' },
-                  { id: 'SCHOOLS', label: 'Schools & Colleges (KPU, BCIT, VCC, Douglas, SD36)' },
-                  { id: 'FOOD_PROGRAMS', label: 'Local Food Banks & Hot Meals' },
+                  { id: 'SCHOOLS', label: 'Schools & Colleges' },
+                  { id: 'FOOD_PROGRAMS', label: 'Local Food Banks & Meals' },
                   { id: 'HANDS_ON_WORK', label: 'Hands-On Paid Training' }
                 ] as Array<{ id: PartnerFilter; label: string }>
               ).map((pill) => {

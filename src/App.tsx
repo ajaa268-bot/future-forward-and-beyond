@@ -26,6 +26,13 @@ import { ClientCompanionPhone } from './components/ClientCompanionPhone.js';
 type DeviceMode = 'split_copilot' | 'tablet_only' | 'phone_only' | 'architecture_ddl';
 type DirectoryCategoryFilter =
   | 'ALL'
+  | 'HOUSING_HOMELESS'
+  | 'SUBSIDIES_LEISURE'
+  | 'PHYSICAL_BARRIERS'
+  | 'MENTAL_HEALTH_CRISIS'
+  | 'RECOVERY_12STEP'
+  | 'LOCAL_SOCIETIES'
+  | 'LAW_FIRST_RESPONDERS'
   | 'OPTIONS_PLUS'
   | 'SOURCES_BC'
   | 'SCHOOLS'
@@ -492,10 +499,17 @@ export function App() {
                 <div className="flex flex-wrap items-center gap-1.5">
                   {(
                     [
-                      { id: 'ALL', label: 'All Programs & Food Banks' },
-                      { id: 'OPTIONS_PLUS', label: 'Options+ (Options Community Services)' },
+                      { id: 'ALL', label: 'All 45+ Programs & Resources' },
+                      { id: 'HOUSING_HOMELESS', label: 'Homelessness & Safe Shelter' },
+                      { id: 'SUBSIDIES_LEISURE', label: 'Subsidies, PWD & Leisure Pass' },
+                      { id: 'PHYSICAL_BARRIERS', label: 'Physical Barriers & Mobility' },
+                      { id: 'MENTAL_HEALTH_CRISIS', label: 'Mental Health & 24/7 Crisis' },
+                      { id: 'RECOVERY_12STEP', label: 'AA / NA / CA / CoDA Recovery' },
+                      { id: 'LOCAL_SOCIETIES', label: 'All Local Societies' },
+                      { id: 'LAW_FIRST_RESPONDERS', label: 'Law, Police, Fire & Ambulance' },
+                      { id: 'OPTIONS_PLUS', label: 'Options+' },
                       { id: 'SOURCES_BC', label: 'Sources BC' },
-                      { id: 'SCHOOLS', label: 'Schools & Colleges (KPU, BCIT, VCC, Douglas, SD36)' },
+                      { id: 'SCHOOLS', label: 'Schools & Colleges' },
                       { id: 'FOOD_BANKS', label: 'Local Food Banks & Hot Meals' },
                       { id: 'HANDS_ON', label: 'Hands-On Work & Trades' }
                     ] as Array<{ id: DirectoryCategoryFilter; label: string }>
@@ -552,6 +566,112 @@ export function App() {
                         }
                         if (directoryCategory === 'OPTIONS_PLUS') return hay.includes('options');
                         if (directoryCategory === 'SOURCES_BC') return hay.includes('sources');
+                        if (directoryCategory === 'LOCAL_SOCIETIES') {
+                          return (
+                            hay.includes('society') ||
+                            hay.includes('diversecity') ||
+                            hay.includes('pics') ||
+                            hay.includes('lcss') ||
+                            hay.includes('purpose') ||
+                            hay.includes('ugm') ||
+                            hay.includes('first united') ||
+                            hay.includes('lookout') ||
+                            hay.includes('phoenix') ||
+                            hay.includes('uniti') ||
+                            hay.includes('posabilities') ||
+                            hay.includes('efry') ||
+                            hay.includes('atira') ||
+                            hay.includes('options') ||
+                            hay.includes('sources')
+                          );
+                        }
+                        if (directoryCategory === 'HOUSING_HOMELESS') {
+                          return (
+                            hay.includes('homeless') ||
+                            hay.includes('shelter') ||
+                            hay.includes('housing') ||
+                            hay.includes('rent') ||
+                            hay.includes('lookout') ||
+                            hay.includes('raincity') ||
+                            hay.includes('phoenix') ||
+                            hay.includes('covenant') ||
+                            hay.includes('efry') ||
+                            hay.includes('atira')
+                          );
+                        }
+                        if (directoryCategory === 'SUBSIDIES_LEISURE') {
+                          return (
+                            hay.includes('subsidy') ||
+                            hay.includes('subsidies') ||
+                            hay.includes('pwd') ||
+                            hay.includes('disability') ||
+                            hay.includes('rent bank') ||
+                            hay.includes('leisure') ||
+                            hay.includes('pool') ||
+                            hay.includes('bus pass') ||
+                            p.provides_living_stipend
+                          );
+                        }
+                        if (directoryCategory === 'PHYSICAL_BARRIERS') {
+                          return (
+                            hay.includes('physical') ||
+                            hay.includes('mobility') ||
+                            hay.includes('wheelchair') ||
+                            hay.includes('neil squire') ||
+                            hay.includes('spinal') ||
+                            hay.includes('disability alliance') ||
+                            hay.includes('handydart') ||
+                            hay.includes('ergonomic') ||
+                            hay.includes('uniti') ||
+                            hay.includes('posabilities') ||
+                            hay.includes('leisure')
+                          );
+                        }
+                        if (directoryCategory === 'MENTAL_HEALTH_CRISIS') {
+                          return (
+                            hay.includes('mental health') ||
+                            hay.includes('crisis') ||
+                            hay.includes('cmha') ||
+                            hay.includes('clubhouse') ||
+                            hay.includes('stepping stone') ||
+                            hay.includes('foundry') ||
+                            hay.includes('pact') ||
+                            hay.includes('cares') ||
+                            hay.includes('9-8-8') ||
+                            hay.includes('counseling')
+                          );
+                        }
+                        if (directoryCategory === 'RECOVERY_12STEP') {
+                          return (
+                            hay.includes('anonymous') ||
+                            hay.includes('12 step') ||
+                            hay.includes('recovery') ||
+                            hay.includes('alcoholics') ||
+                            hay.includes('narcotics') ||
+                            hay.includes('cocaine') ||
+                            hay.includes('coda') ||
+                            hay.includes('phoenix') ||
+                            hay.includes('ugm')
+                          );
+                        }
+                        if (directoryCategory === 'LAW_FIRST_RESPONDERS') {
+                          return (
+                            hay.includes('legal') ||
+                            hay.includes('law') ||
+                            hay.includes('lawyer') ||
+                            hay.includes('eviction') ||
+                            hay.includes('tenant') ||
+                            hay.includes('police') ||
+                            hay.includes('fire') ||
+                            hay.includes('ambulance') ||
+                            hay.includes('paramedic') ||
+                            hay.includes('car 67') ||
+                            hay.includes('car 87') ||
+                            hay.includes('9-1-1') ||
+                            hay.includes('8-1-1') ||
+                            hay.includes('victim')
+                          );
+                        }
                         if (directoryCategory === 'SCHOOLS') {
                           return (
                             hay.includes('kpu') ||

@@ -171,6 +171,44 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
           </div>
         )}
 
+        {/* 3B. Pocket 24/7 Emergency, Shelter, Mental Health & Recovery Card */}
+        <div className="bg-gradient-to-br from-[#e6f6f3] to-[#eaf4fa] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase text-[#145e54]">
+              24/7 Crisis, Shelter, First Responders &amp; Recovery
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                speakText(
+                  'Pocket 24/7 Numbers. Emergency Police, Fire, or Ambulance: 9 1 1. Free 24/7 Nurse: 8 1 1. Shelter beds tonight: 2 1 1. Mental health crisis line: 9 8 8 or Fraser Crisis 604-951-8855. Surrey Car 67 mental health team: 604-599-0502. AA: 604-434-3933. NA: 604-873-1018. CA: 604-662-8500. CoDA: 604-688-5588. Legal Aid: 604-408-2172.'
+                )
+              }
+              className="text-[#145e54] hover:text-[#12323b] cursor-pointer"
+              title="Listen Out Loud"
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="bg-white/95 rounded-xl p-2.5 text-[11px] text-[#163038] space-y-1 border border-[#cde8e2]">
+            <div>
+              <strong>Emergency / Nurse / Shelter:</strong> 9-1-1 • Nurse: 8-1-1 • Shelter: 2-1-1
+            </div>
+            <div>
+              <strong>Mental Health Crisis:</strong> 9-8-8 • 310-6789 • Fraser: 604-951-8855
+            </div>
+            <div>
+              <strong>Car 67 (Surrey):</strong> 604-599-0502 • <strong>Car 87 (Van):</strong> 604-675-3700
+            </div>
+            <div>
+              <strong>AA:</strong> 604-434-3933 • <strong>NA:</strong> 604-873-1018 • <strong>CA:</strong> 604-662-8500
+            </div>
+            <div>
+              <strong>CoDA:</strong> 604-688-5588 • <strong>Legal Aid:</strong> 604-408-2172
+            </div>
+          </div>
+        </div>
+
         {/* 4. Quick Work Preferences on Phone */}
         <div className="linen-card border border-[#e3dccf] rounded-2xl p-3.5 space-y-2.5">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#4a656d]">

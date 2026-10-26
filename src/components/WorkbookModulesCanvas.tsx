@@ -144,6 +144,42 @@ const VOICE_PRESETS = [
 
 const BARRIER_BLOCKS = [
   {
+    id: 'Safe Shelter / Housing & Rent Subsidy',
+    title: 'Housing, Shelter & Rent Subsidy',
+    subtitle: '24/7 shelter bed tonight, BC Housing / RAP rent subsidy, or Rent Bank help',
+    helpSummary: 'Included: Shelter, BC Housing & Rent Bank'
+  },
+  {
+    id: 'Mental Health & Crisis Support',
+    title: 'Mental Health & 24/7 Crisis Care',
+    subtitle: 'Walk-in counseling, Clubhouse community, CMHA, or 9-8-8 / Car 67 peer support',
+    helpSummary: 'Included: Walk-in mental health & peer support'
+  },
+  {
+    id: 'Disability (PWD) / Income Assistance',
+    title: 'PWD ($1,500+/mo) & Leisure Pass',
+    subtitle: 'Disability assistance, crisis grants, $52/yr Bus Pass & FREE Pool/Gym/Shower Pass',
+    helpSummary: 'Included: PWD advocate + Free Leisure Pass'
+  },
+  {
+    id: 'Physical Barriers & Mobility Gear',
+    title: 'Physical Barriers & Adaptive Gear',
+    subtitle: 'Neil Squire ergonomic/adaptive tools, wheelchair grants, & HandyDART',
+    helpSummary: 'Included: Free adaptive gear & HandyDART'
+  },
+  {
+    id: 'AA / NA / CA / CoDA Peer Recovery',
+    title: 'AA, NA, CA & CoDA Recovery',
+    subtitle: 'Free 24/7 anonymous peer recovery lines & welcoming daily local meetings',
+    helpSummary: 'Included: 24/7 AA / NA / CA / CoDA meetings'
+  },
+  {
+    id: 'Legal Aid & First Responder Help',
+    title: 'Legal Aid, Eviction & Nurse 8-1-1',
+    subtitle: 'Free eviction/court lawyer, VictimLink, Car 67/87 nurse & BCEHS paramedics',
+    helpSummary: 'Included: Free legal aid & health outreach'
+  },
+  {
     id: 'Transit Pass / Compass',
     title: 'Bus Pass / Compass Card',
     subtitle: 'Free bus and SkyTrain tickets so getting there is easy',
@@ -151,21 +187,15 @@ const BARRIER_BLOCKS = [
   },
   {
     id: 'Groceries / Meals',
-    title: 'Groceries & Hot Meals',
-    subtitle: 'Daily hot meals and take-home food support',
-    helpSummary: 'Included: Programs with free daily meals'
+    title: 'Local Food Banks & Hot Meals',
+    subtitle: 'Daily hot meals and take-home food bank hampers',
+    helpSummary: 'Included: Food banks & free daily meals'
   },
   {
     id: 'Paperwork / Scribe Help',
-    title: 'Help With Forms',
-    subtitle: 'We sit down with a coffee and fill out any paperwork together',
-    helpSummary: 'Included: Staff handles the forms with you'
-  },
-  {
-    id: 'Replacement ID / SIN',
-    title: 'Need ID or SIN Card',
-    subtitle: 'Start right away with no ID needed + free help replacing lost ID',
-    helpSummary: 'Included: No ID required to start'
+    title: 'Help With Forms & Replacement ID',
+    subtitle: 'We sit down with a coffee, fill out paperwork together & replace lost ID/SIN',
+    helpSummary: 'Included: Staff handles forms + no ID needed'
   },
   {
     id: 'Work Boots / Gear',
