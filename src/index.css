@@ -2,61 +2,106 @@
 
 @layer base {
   body {
-    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: #f6f3ec;
-    color: #18333b;
-    /* Subtle woven sand-linen texture + comforting seafoam & coastal blue ambient light */
+    font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f5ede0;
+    color: #14343d;
+    /* Sunlit coastal sky -> shallow turquoise lagoon -> warm sandy beach shoreline */
     background-image:
-      radial-gradient(circle at 12% 8%, rgba(42, 157, 143, 0.10), transparent 42%),
-      radial-gradient(circle at 88% 15%, rgba(56, 138, 182, 0.09), transparent 40%),
-      radial-gradient(circle at 50% 95%, rgba(226, 214, 193, 0.35), transparent 50%),
-      repeating-linear-gradient(
-        0deg,
-        rgba(198, 184, 162, 0.08) 0px,
-        rgba(198, 184, 162, 0.08) 1px,
-        transparent 1px,
-        transparent 6px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        rgba(198, 184, 162, 0.08) 0px,
-        rgba(198, 184, 162, 0.08) 1px,
-        transparent 1px,
-        transparent 6px
+      radial-gradient(circle at 82% 6%, rgba(255, 223, 160, 0.38), transparent 34%),
+      radial-gradient(circle at 15% 10%, rgba(42, 182, 167, 0.18), transparent 45%),
+      radial-gradient(circle at 85% 28%, rgba(56, 152, 204, 0.15), transparent 45%),
+      linear-gradient(
+        180deg,
+        #e2f6f5 0%,
+        #eaf8f6 18%,
+        #f5f4eb 42%,
+        #f6efe2 72%,
+        #efe4d0 100%
       );
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Outfit", "Plus Jakarta Sans", sans-serif;
+    letter-spacing: -0.015em;
   }
 }
 
+/* Gentle ocean wave motion */
+@keyframes tideSway {
+  0%, 100% {
+    transform: translateX(0px) translateY(0px);
+  }
+  50% {
+    transform: translateX(-14px) translateY(2px);
+  }
+}
+
+@keyframes sunPulse {
+  0%, 100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.04);
+  }
+}
+
+.animate-tide {
+  animation: tideSway 9s ease-in-out infinite;
+}
+
+.animate-tide-slow {
+  animation: tideSway 14s ease-in-out infinite reverse;
+}
+
+.animate-sun {
+  animation: sunPulse 8s ease-in-out infinite;
+}
+
+/* Warm sun-bleached beach sand & woven linen texture */
 .linen-card {
-  background-color: #faf8f3;
+  background: linear-gradient(145deg, rgba(253, 250, 244, 0.96) 0%, rgba(246, 238, 224, 0.94) 100%);
   background-image:
+    radial-gradient(rgba(196, 175, 142, 0.16) 1px, transparent 0),
     repeating-linear-gradient(
       0deg,
-      rgba(205, 192, 170, 0.07) 0px,
-      rgba(205, 192, 170, 0.07) 1px,
+      rgba(205, 188, 160, 0.06) 0px,
+      rgba(205, 188, 160, 0.06) 1px,
       transparent 1px,
-      transparent 4px
+      transparent 5px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(205, 192, 170, 0.07) 0px,
-      rgba(205, 192, 170, 0.07) 1px,
+      rgba(205, 188, 160, 0.06) 0px,
+      rgba(205, 188, 160, 0.06) 1px,
       transparent 1px,
-      transparent 4px
+      transparent 5px
     );
-}
-
-.sand-panel {
-  background-color: #f3eee4;
-  background-image:
-    radial-gradient(rgba(180, 165, 140, 0.12) 1px, transparent 0);
-  background-size: 12px 12px;
-}
-
-.clinical-card {
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
+  background-size: 14px 14px, 100% 100%, 100% 100%;
   box-shadow:
-    0 10px 30px -10px rgba(24, 68, 78, 0.07),
-    0 2px 8px -2px rgba(24, 68, 78, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 4px 14px -4px rgba(104, 86, 58, 0.07);
+}
+
+/* Frosted Sea-Glass Card */
+.clinical-card {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.93) 0%, rgba(247, 253, 252, 0.90) 60%, rgba(252, 249, 242, 0.92) 100%);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    0 14px 34px -12px rgba(20, 82, 96, 0.09),
+    0 4px 12px -3px rgba(20, 82, 96, 0.04);
+}
+
+/* Lagoon & Seafoam Wave Button */
+.ocean-btn {
+  background: linear-gradient(135deg, #1ca796 0%, #2389b5 100%);
+  box-shadow: 0 6px 16px -4px rgba(28, 167, 150, 0.38);
+}
+
+.ocean-btn:hover {
+  background: linear-gradient(135deg, #179485 0%, #1d78a1 100%);
+  transform: translateY(-1px);
 }

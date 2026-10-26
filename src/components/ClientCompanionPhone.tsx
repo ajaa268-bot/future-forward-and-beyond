@@ -47,14 +47,14 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[395px] mx-auto bg-white border-[6px] border-[#dfd8ca] rounded-[40px] p-4 shadow-xl relative overflow-hidden">
-      {/* Phone Top Notch / Status Bar */}
-      <div className="flex items-center justify-between px-2.5 pb-3 border-b border-[#eae4d8] text-[11px] font-medium text-[#547078]">
-        <span className="flex items-center gap-1.5 text-[#1b7a6e] font-semibold">
+    <div className="w-full max-w-[395px] mx-auto bg-gradient-to-b from-white via-[#fcfaf5] to-[#f5ede0] border-[7px] border-[#e2d5be] rounded-[44px] p-4 shadow-xl relative overflow-hidden">
+      {/* Phone Coastal Wave Banner */}
+      <div className="flex items-center justify-between px-3 py-2.5 mb-1 rounded-2xl bg-gradient-to-r from-[#dff7f4] via-[#eaf8f6] to-[#e4f2fb] border border-[#bce5dd] text-[11px] font-medium text-[#355862]">
+        <span className="flex items-center gap-1.5 text-[#146e62] font-semibold">
           <Wifi className="w-3.5 h-3.5" /> Live Sync
         </span>
-        <span className="font-bold text-[#163038]">{session.client_alias}’s Pocket Guide</span>
-        <span className="text-[#2c6e9b] font-medium">Take-Home Card</span>
+        <span className="font-bold text-[#12323b]">{session.client_alias}’s Beach Card</span>
+        <span className="text-[#1f6a8f] font-medium">Take-Home</span>
       </div>
 
       <div className="space-y-4 mt-3.5 max-h-[760px] overflow-y-auto pr-1">

@@ -199,12 +199,12 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
   };
 
   return (
-    <div className="clinical-card border border-[#dfe6dd] rounded-2xl overflow-hidden">
+    <div className="clinical-card border border-[#cde8e2] rounded-3xl overflow-hidden">
       {/* Simple, Welcoming Step Navigation */}
-      <div className="linen-card border-b border-[#e4ddd0] px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div className="linen-card border-b border-[#e2d6c1] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-[#2a9d8f]" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#46636b]">
+          <Compass className="w-4 h-4 text-[#1ca796]" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#3d5f68]">
             Step-by-Step Strengths Guide (No Typing or Spelling Needed)
           </span>
         </div>
@@ -226,16 +226,16 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                 onClick={() =>
                   onPatchSession({ active_module_on_canvas: tab.code })
                 }
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                   isActive
-                    ? 'bg-[#2a9d8f] text-white shadow-sm font-semibold'
-                    : 'bg-white/90 text-[#3c5a63] hover:bg-[#eaf7f4] border border-[#dfd8ca]'
+                    ? 'ocean-btn text-white font-semibold'
+                    : 'bg-white/90 text-[#35565f] hover:bg-[#e6f7f5] border border-[#dfd2bc]'
                 }`}
               >
                 {isDone && (
                   <CheckCircle2
                     className={`w-3.5 h-3.5 ${
-                      isActive ? 'text-white' : 'text-[#2a9d8f]'
+                      isActive ? 'text-white' : 'text-[#1ca796]'
                     }`}
                   />
                 )}
@@ -320,10 +320,10 @@ export const WorkbookModulesCanvas: React.FC<WorkbookModulesCanvasProps> = ({
                               completed_modules_json: markModuleCompleted('TROUBLESHOOTER')
                             })
                           }
-                          className={`w-full text-left p-3.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                          className={`w-full text-left p-3.5 rounded-2xl border text-xs transition-all cursor-pointer ${
                             activeNode
-                              ? 'bg-[#2a9d8f] border-[#1f7a6e] text-white font-medium shadow-xs'
-                              : 'bg-white border-[#e2dcd0] text-[#28454e] hover:border-[#2a9d8f]/60 hover:bg-[#f8fcfb]'
+                              ? 'ocean-btn border-transparent text-white font-medium'
+                              : 'bg-white/95 border-[#e2d6c1] text-[#26464f] hover:border-[#1ca796]/60 hover:bg-[#f2fbf9]'
                           }`}
                         >
                           <div className="flex items-center justify-between text-[11px] font-bold mb-1">
