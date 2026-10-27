@@ -4,6 +4,10 @@
     "client_alias": "Stratus",
     "coordinator_id": "Marcus V. (Lead Co-Pilot)",
     "municipality": "Surrey",
+    "pin_recovery_hint": "Easy demo PIN: 1-2-3-4 (or ask Marcus)",
+    "avatar_icon": "Waves",
+    "age_group": "Adult (25–54)",
+    "is_guest": false,
     "problem_solving_complexity": 4,
     "text_admin_tolerance": 1,
     "preferred_learning_modality": "Kinesthetic_HandsOn",
@@ -115,6 +119,136 @@
     "next_micro_step_text": "Call Sarah at Options+ Teaching Kitchen (604-584-5811) together for a friendly intro + pick up fresh groceries & bus tickets today.",
     "coordinator_scribe_required": true,
     "active_module_on_canvas": "TROUBLESHOOTER",
-    "updated_at": "2026-10-27T01:38:37.872Z"
+    "updated_at": "2026-10-27T14:10:02.118Z",
+    "pin_hash": "7708e65291490df408d1a09992040dbd4260391ec5e5fbea28a9485d37494e4880e85f0fcc0c675774709b4d62f682942616d9648e62253e726cf6bd1143fb65",
+    "pin_salt": "d02b03ca92d74bb75ece887e3620656e",
+    "recovery_phrase_hash": "2b00dd9237484098cd20b9a8573a88478700141116e1a499105392b36dec1740621ac47392c2d58f3819c92326485ba049b0bd74156f91d1c681136e1bbc05c0",
+    "recovery_phrase_salt": "9f5952cb27b15a1babe2cadea7201774",
+    "account_created_at": "2026-10-27T13:51:53.944Z",
+    "last_login_at": "2026-10-27T14:10:02.118Z"
+  },
+  {
+    "session_id": "GUEST",
+    "client_alias": "Guest Visitor",
+    "coordinator_id": "Marcus V. (Lead Co-Pilot)",
+    "municipality": "Surrey",
+    "pin_recovery_hint": "Guest Mode — No PIN required",
+    "avatar_icon": "Sun",
+    "age_group": "All Ages & Walks of Life",
+    "is_guest": true,
+    "problem_solving_complexity": 4,
+    "text_admin_tolerance": 1,
+    "preferred_learning_modality": "Kinesthetic_HandsOn",
+    "autonomy_preference": "Independent_Problem_Solver",
+    "current_readiness_tier": 2,
+    "troubleshooter_selections": {
+      "scenario_id": "kitchen_rush",
+      "selected_node_id": "isolate_burner",
+      "solving_style": "Root-Cause Isolation"
+    },
+    "spec_sheet_state": {
+      "input_channel": "Kinesthetic_HandsOn",
+      "crew_slider": 30,
+      "structure_slider": 80,
+      "bottlenecks": [
+        "Heavy Reading / Spelling Forms",
+        "Sitting Still at a Desk"
+      ]
+    },
+    "voice_transcript": "Last month at a big family and community dinner, one side of the stove stopped working right when everyone was waiting to eat. I turned off the bad burner, moved the big pots over, and got all the plates served warm on time. I'm also the person friends call when their TV, speaker, or computer isn't working—I just check the cords one by one until it works.",
+    "skill_blueprint_json": {
+      "headline_strength": "Calm Problem-Solver & Hands-On Doer",
+      "extracted_pro_skills": [
+        {
+          "what_you_did": "Kept a big dinner moving and got everyone fed on time when a stove burner stopped working",
+          "pro_translation": "Cooking Under Pressure, Kitchen Prep & Staying Calm When Busy",
+          "noc_domain": "Good Fit: Options+ Teaching Kitchen, VCC Culinary & Local Food Programs"
+        },
+        {
+          "what_you_did": "Helping friends fix TVs, speakers, and computers by checking connections step by step",
+          "pro_translation": "Practical Tech Setup, Cable Checking & Everyday Troubleshooting",
+          "noc_domain": "Good Fit: KPU Tech, BCIT Trades Discovery & Repair Workshops"
+        }
+      ],
+      "coordinator_private_notes": "Great practical problem-solver who learns best by doing things hands-on rather than reading long forms. Match with Options+, Sources BC, KPU/BCIT/VCC hands-on programs, and same-day food & transit support."
+    },
+    "completed_modules_json": [
+      "TROUBLESHOOTER",
+      "SPEC_SHEET",
+      "VOICE_BLUEPRINT",
+      "PRESSURE_VALVE"
+    ],
+    "extracted_likes_tags": [
+      "Cooking & Kitchen Teamwork",
+      "Fixing Everyday Tech & Gear",
+      "Hands-On Projects"
+    ],
+    "extracted_dislikes_tags": [
+      "Long Paperwork & Forms",
+      "Sitting at an Office Desk All Day"
+    ],
+    "active_barriers": [
+      "Transit Pass / Compass",
+      "Groceries / Meals",
+      "Paperwork / Scribe Help"
+    ],
+    "loadout_cards": [
+      {
+        "id": "card-culinary",
+        "title": "Cooking & Community Kitchens",
+        "category": "Culinary_Hospitality",
+        "icon": "Flame",
+        "status": "Lock It In",
+        "tagline": "Making real food with a friendly team—no desk work"
+      },
+      {
+        "id": "card-hardware",
+        "title": "Fixing Computers, Phones & Sound Gear",
+        "category": "Tech_Media_Lab",
+        "icon": "Cpu",
+        "status": "Lock It In",
+        "tagline": "Plug things in, test parts, and bring gear back to life"
+      },
+      {
+        "id": "card-trades",
+        "title": "Hands-On Tools, Bikes & Trades Schools",
+        "category": "Trades_Apprenticeship",
+        "icon": "Wrench",
+        "status": "Test Run",
+        "tagline": "Using real tools at KPU, BCIT, or local repair shops"
+      },
+      {
+        "id": "card-stage",
+        "title": "Music, Shows & Event Setup",
+        "category": "Tech_Media_Lab",
+        "icon": "Speaker",
+        "status": "Test Run",
+        "tagline": "Setting up speakers, lights, and stages for live events"
+      },
+      {
+        "id": "card-hort",
+        "title": "Outdoors, Parks & Gardening",
+        "category": "Bridge_Training",
+        "icon": "Trees",
+        "status": "Test Run",
+        "tagline": "Working outside in fresh air caring for parks, plants, and trails"
+      },
+      {
+        "id": "card-desk",
+        "title": "Quiet Indoor Sorting & Checklists",
+        "category": "Employment_Placement",
+        "icon": "FileText",
+        "status": "Scrap It",
+        "tagline": "Calm indoor routine organizing supplies at your own pace"
+      }
+    ],
+    "pinned_program_id": "prog-surrey-culinary-01",
+    "pinned_relief_program_id": "prog-sources-foodhub-04",
+    "next_micro_step_text": "Call Sarah at Options+ Teaching Kitchen (604-584-5811) together for a friendly intro + pick up fresh groceries & bus tickets today.",
+    "coordinator_scribe_required": true,
+    "active_module_on_canvas": "TROUBLESHOOTER",
+    "updated_at": "2026-10-27T13:31:38.386Z",
+    "account_created_at": "2026-10-27T13:31:38.386Z",
+    "last_login_at": "2026-10-27T13:31:38.386Z"
   }
 ]

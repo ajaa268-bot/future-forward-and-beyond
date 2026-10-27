@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import {
   VerifiedProgramRecord,
@@ -8,7 +9,8 @@ import {
   DDLQueryFilterParams,
   SyncChangeItem,
   PublicClientProfileSummary,
-  ClientRegistrationPayload
+  ClientRegistrationPayload,
+  AuthSecurityStatus
 } from '../src/types/navigator.js';
 import {
   getProgramPrimarySectionId,
@@ -25,20 +27,94 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, '../db/local_store');
 const SESSION_FILE = path.join(DATA_DIR, 'sessions.json');
+const SESSION_BACKUP_FILE = path.join(DATA_DIR, 'sessions.backup.json');
+const AUTH_TOKENS_FILE = path.join(DATA_DIR, 'auth_tokens.json');
+const AUTH_SECRET_FILE = path.join(DATA_DIR, 'auth_secret.key');
 const PROGRAMS_FILE = path.join(DATA_DIR, 'verified_programs.json');
+
+interface StoredAuthTokenRecord {
+  token_id: string;
+  session_id: string;
+  issued_at: string;
+  expires_at: string;
+  remember_device: boolean;
+  last_seen_at: string;
+}
+
+interface FailedLoginTracker {
+  count: number;
+  first_failed_at: number;
+  locked_until: number;
+}
 
 export class NavigatorDatabaseEngine {
   private programs: VerifiedProgramRecord[] = [];
   private modules: WorkbookModuleRecord[] = SEEDED_WORKBOOK_MODULES;
   private sessions: Map<string, ClientWorkbookSession> = new Map();
+  private authTokens: Map<string, StoredAuthTokenRecord> = new Map();
+  private failedLogins: Map<string, FailedLoginTracker> = new Map();
+  private hmacSecret: string = '';
 
   constructor() {
     this.ensureLocalStore();
   }
 
+  private hashSecret(secret: string, saltHex?: string): { hash: string; salt: string } {
+    const salt = saltHex || crypto.randomBytes(16).toString('hex');
+    const derived = crypto.scryptSync(secret. normalize('NFKC'), salt, 64);
+    return {
+      hash: derived.toString('hex'),
+      salt
+    };
+  }
+
+  private verifySecret(candidate: string, storedHash?: string, storedSalt?: string): boolean {
+    if (!storedHash || !storedSalt) return false;
+    try {
+      const candidateBuf = crypto.scryptSync(candidate.normalize('NFKC'), storedSalt, 64);
+      const storedBuf = Buffer.from(storedHash, 'hex');
+      if (candidateBuf.length !== storedBuf.length) return false;
+      return crypto.timingSafeEqual(candidateBuf, storedBuf);
+    } catch {
+      return false;
+    }
+  }
+
+  private writeJsonAtomic(filePath: string, data: unknown, backupPath?: string) {
+    const serialized = JSON.stringify(data, null, 2);
+    const tmpPath = `${filePath}.tmp`;
+    fs.writeFileSync(tmpPath, serialized, { encoding: 'utf-8', mode: 0o600 });
+    fs.renameSync(tmpPath, filePath);
+    if (backupPath) {
+      try {
+        fs.writeFileSync(backupPath, serialized, { encoding: 'utf-8', mode: 0o600 });
+      } catch {
+        // ignore backup error
+      }
+    }
+  }
+
   private ensureLocalStore() {
     if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
+    }
+
+    // Load or generate persistent 256-bit HMAC server signing key
+    if (fs.existsSync(AUTH_SECRET_FILE)) {
+      try {
+        this.hmacSecret = fs.readFileSync(AUTH_SECRET_FILE, 'utf-8').trim();
+      } catch {
+        this.hmacSecret = '';
+      }
+    }
+    if (!this.hmacSecret || this.hmacSecret.length < 32) {
+      this.hmacSecret =
+        process.env.AUTH_HMAC_SECRET || crypto.randomBytes(32).toString('hex');
+      try {
+        fs.writeFileSync(AUTH_SECRET_FILE, this.hmacSecret, { encoding: 'utf-8', mode: 0o600 });
+      } catch {
+        // ignore
+      }
     }
 
     // Merge persisted custom/imported programs with SEEDED_VERIFIED_PROGRAMS
@@ -55,10 +131,8 @@ export class NavigatorDatabaseEngine {
         for (const p of persisted) {
           if (!p || !p.program_id) continue;
           if (!seededMap.has(p.program_id)) {
-            // Preserve custom-imported program from daily sync or manual import
             seededMap.set(p.program_id, p);
           } else {
-            // Preserve updated verification timestamps or live synced edits if newer
             const base = seededMap.get(p.program_id)!;
             if (p.last_verified_at && p.last_verified_at > base.last_verified_at) {
               seededMap.set(p.program_id, {
@@ -77,39 +151,165 @@ export class NavigatorDatabaseEngine {
     this.programs = Array.from(seededMap.values());
     this.persistPrograms();
 
-    if (fs.existsSync(SESSION_FILE)) {
-      try {
-        const raw: ClientWorkbookSession[] = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf-8'));
-        for (const s of raw) {
-          this.sessions.set(s.session_id, {
-            ...s,
-            pin_code: s.pin_code || '1234',
-            pin_recovery_hint:
-              s.pin_recovery_hint ||
-              (s.session_id === 'A842' ? 'Easy demo PIN: 1-2-3-4 (or ask Marcus)' : 'Ask your coordinator or check your pocket card'),
-            avatar_icon: s.avatar_icon || 'Waves',
-            age_group: s.age_group || 'Adult (25–54)',
-            is_guest: Boolean(s.is_guest)
-          });
+    // Load sessions from primary store or automatic backup store
+    let rawSessions: ClientWorkbookSession[] | null = null;
+    for (const candidateFile of [SESSION_FILE, SESSION_BACKUP_FILE]) {
+      if (fs.existsSync(candidateFile)) {
+        try {
+          const parsed = JSON.parse(fs.readFileSync(candidateFile, 'utf-8'));
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            rawSessions = parsed;
+            break;
+          }
+        } catch {
+          // try backup
         }
-      } catch {
-        this.sessions.set(INITIAL_DEMO_SESSION.session_id, { ...INITIAL_DEMO_SESSION });
+      }
+    }
+
+    let migratedHashes = false;
+    if (rawSessions) {
+      for (const s of rawSessions) {
+        const nowIso = new Date().toISOString();
+        let pinHash = s.pin_hash;
+        let pinSalt = s.pin_salt;
+
+        // Migrate any legacy plaintext pin_code into salted scrypt hash and wipe plaintext
+        if (!s.is_guest && (!pinHash || !pinSalt)) {
+          const rawPin = s.pin_code || '1234';
+          const hashed = this.hashSecret(rawPin);
+          pinHash = hashed.hash;
+          pinSalt = hashed.salt;
+          migratedHashes = true;
+        }
+
+        // Ensure default recovery phrase hash on demo account A842 if not yet set
+        let recHash = s.recovery_phrase_hash;
+        let recSalt = s.recovery_phrase_salt;
+        if (s.session_id === 'A842' && (!recHash || !recSalt)) {
+          const rec = this.hashSecret('harbor');
+          recHash = rec.hash;
+          recSalt = rec.salt;
+          migratedHashes = true;
+        }
+
+        const cleanSession: ClientWorkbookSession = {
+          ...s,
+          pin_code: undefined,
+          pin_hash: pinHash,
+          pin_salt: pinSalt,
+          recovery_phrase_hash: recHash,
+          recovery_phrase_salt: recSalt,
+          pin_recovery_hint: s.pin_recovery_hint || 'Private recovery phrase protected',
+          avatar_icon: s.avatar_icon || 'Waves',
+          age_group: s.age_group || 'Adult (25–54)',
+          is_guest: Boolean(s.is_guest),
+          account_created_at: s.account_created_at || s.updated_at || nowIso,
+          last_login_at: s.last_login_at || s.updated_at || nowIso
+        };
+        if (s.pin_code !== undefined) {
+          migratedHashes = true;
+        }
+        this.sessions.set(s.session_id, cleanSession);
       }
     }
 
     if (!this.sessions.has(INITIAL_DEMO_SESSION.session_id)) {
-      this.sessions.set(INITIAL_DEMO_SESSION.session_id, { ...INITIAL_DEMO_SESSION });
+      const demoPin = this.hashSecret(INITIAL_DEMO_SESSION.pin_code || '1234');
+      const demoRec = this.hashSecret('harbor');
+      const nowIso = new Date().toISOString();
+      this.sessions.set(INITIAL_DEMO_SESSION.session_id, {
+        ...INITIAL_DEMO_SESSION,
+        pin_code: undefined,
+        pin_hash: demoPin.hash,
+        pin_salt: demoPin.salt,
+        recovery_phrase_hash: demoRec.hash,
+        recovery_phrase_salt: demoRec.salt,
+        account_created_at: nowIso,
+        last_login_at: nowIso
+      });
+      migratedHashes = true;
+    }
+
+    if (migratedHashes) {
       this.persistSessions();
+    }
+
+    // Load persisted auth tokens for long-term session retention across server restarts
+    if (fs.existsSync(AUTH_TOKENS_FILE)) {
+      try {
+        const rawTokens: StoredAuthTokenRecord[] = JSON.parse(
+          fs.readFileSync(AUTH_TOKENS_FILE, 'utf-8')
+        );
+        const now = Date.now();
+        for (const t of rawTokens) {
+          if (t && t.token_id && new Date(t.expires_at).getTime() > now) {
+            this.authTokens.set(t.token_id, t);
+          }
+        }
+      } catch {
+        // ignore
+      }
     }
   }
 
   private persistPrograms() {
-    fs.writeFileSync(PROGRAMS_FILE, JSON.stringify(this.programs, null, 2), 'utf-8');
+    this.writeJsonAtomic(PROGRAMS_FILE, this.programs);
   }
 
   private persistSessions() {
-    const arr = Array.from(this.sessions.values());
-    fs.writeFileSync(SESSION_FILE, JSON.stringify(arr, null, 2), 'utf-8');
+    const arr = Array.from(this.sessions.values()).map((s) => ({
+      ...s,
+      pin_code: undefined
+    }));
+    this.writeJsonAtomic(SESSION_FILE, arr, SESSION_BACKUP_FILE);
+  }
+
+  private persistAuthTokens() {
+    const now = Date.now();
+    const active = Array.from(this.authTokens.values()).filter(
+      (t) => new Date(t.expires_at).getTime() > now
+    );
+    this.writeJsonAtomic(AUTH_TOKENS_FILE, active);
+  }
+
+  /**
+   * Strips sensitive cryptographic hashes and PIN fields before sending a session to any client.
+   */
+  public sanitizeSession(session: ClientWorkbookSession): ClientWorkbookSession {
+    const copy: ClientWorkbookSession = {
+      ...session,
+      pin_code: undefined,
+      pin_hash: undefined,
+      pin_salt: undefined,
+      recovery_phrase_hash: undefined,
+      recovery_phrase_salt: undefined
+    };
+    delete copy.pin_code;
+    delete copy.pin_hash;
+    delete copy.pin_salt;
+    delete copy.recovery_phrase_hash;
+    delete copy.recovery_phrase_salt;
+    return copy;
+  }
+
+  public getAuthSecurityStatus(
+    session: ClientWorkbookSession,
+    tokenRecord?: StoredAuthTokenRecord | null
+  ): AuthSecurityStatus {
+    return {
+      authenticated: !session.is_guest,
+      auth_mode: session.is_guest ? 'guest_anonymous' : 'private_pin_token',
+      token_expires_at: tokenRecord?.expires_at,
+      remember_device: tokenRecord?.remember_device ?? true,
+      account_created_at: session.account_created_at || session.updated_at,
+      last_login_at: session.last_login_at || session.updated_at,
+      pin_hashed: Boolean(session.pin_hash && session.pin_salt),
+      has_recovery_phrase: Boolean(
+        session.recovery_phrase_hash && session.recovery_phrase_salt
+      ),
+      retention_status: 'durable_retained'
+    };
   }
 
   public getModules(): WorkbookModuleRecord[] {
@@ -312,10 +512,17 @@ export class NavigatorDatabaseEngine {
   public getSession(sessionId: string = 'A842'): ClientWorkbookSession {
     const existing = this.sessions.get(sessionId);
     if (existing) return existing;
+    const nowIso = new Date().toISOString();
+    const demoPin = this.hashSecret('1234');
     const fresh: ClientWorkbookSession = {
       ...INITIAL_DEMO_SESSION,
+      pin_code: undefined,
+      pin_hash: demoPin.hash,
+      pin_salt: demoPin.salt,
       session_id: sessionId,
-      updated_at: new Date().toISOString()
+      account_created_at: nowIso,
+      last_login_at: nowIso,
+      updated_at: nowIso
     };
     this.sessions.set(sessionId, fresh);
     this.persistSessions();
@@ -327,9 +534,24 @@ export class NavigatorDatabaseEngine {
     patch: Partial<ClientWorkbookSession>
   ): ClientWorkbookSession {
     const current = this.getSession(sessionId);
+    // Prevent external patches from overwriting security hashes
+    const {
+      pin_code: _ignorePin,
+      pin_hash: _ignoreHash,
+      pin_salt: _ignoreSalt,
+      recovery_phrase_hash: _ignoreRecHash,
+      recovery_phrase_salt: _ignoreRecSalt,
+      ...safePatch
+    } = patch;
+
     const updated: ClientWorkbookSession = {
       ...current,
-      ...patch,
+      ...safePatch,
+      pin_code: undefined,
+      pin_hash: current.pin_hash,
+      pin_salt: current.pin_salt,
+      recovery_phrase_hash: current.recovery_phrase_hash,
+      recovery_phrase_salt: current.recovery_phrase_salt,
       session_id: sessionId,
       updated_at: new Date().toISOString()
     };
@@ -340,15 +562,22 @@ export class NavigatorDatabaseEngine {
 
   public resetDemoSession(sessionId: string = 'A842'): ClientWorkbookSession {
     const existing = this.sessions.get(sessionId);
+    const demoPin = this.hashSecret('1234');
     const reset: ClientWorkbookSession = {
       ...JSON.parse(JSON.stringify(INITIAL_DEMO_SESSION)),
       session_id: sessionId,
       client_alias: existing?.client_alias || INITIAL_DEMO_SESSION.client_alias,
-      pin_code: existing?.pin_code || INITIAL_DEMO_SESSION.pin_code,
+      pin_code: undefined,
+      pin_hash: existing?.pin_hash || demoPin.hash,
+      pin_salt: existing?.pin_salt || demoPin.salt,
+      recovery_phrase_hash: existing?.recovery_phrase_hash,
+      recovery_phrase_salt: existing?.recovery_phrase_salt,
       pin_recovery_hint: existing?.pin_recovery_hint || INITIAL_DEMO_SESSION.pin_recovery_hint,
       avatar_icon: existing?.avatar_icon || INITIAL_DEMO_SESSION.avatar_icon,
       age_group: existing?.age_group || INITIAL_DEMO_SESSION.age_group,
       is_guest: existing?.is_guest || false,
+      account_created_at: existing?.account_created_at || new Date().toISOString(),
+      last_login_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
     this.sessions.set(sessionId, reset);
@@ -357,91 +586,292 @@ export class NavigatorDatabaseEngine {
   }
 
   /**
-   * Lists registered client profiles (excluding anonymous guest sessions) for quick-tap PIN sign-in.
-   * Never exposes raw `pin_code`.
+   * Client names and profiles are strictly PRIVATE.
+   * Never publicly broadcast or enumerate registered client names on the login screen.
    */
   public listClientProfiles(): PublicClientProfileSummary[] {
-    const profiles: PublicClientProfileSummary[] = [];
-    for (const s of this.sessions.values()) {
-      if (s.is_guest || s.session_id === 'GUEST') continue;
-      profiles.push({
-        session_id: s.session_id,
-        client_alias: s.client_alias,
-        municipality: s.municipality || 'Surrey',
-        avatar_icon: s.avatar_icon || 'Waves',
-        age_group: s.age_group || 'Adult (25–54)',
-        pin_recovery_hint: s.pin_recovery_hint,
-        is_guest: false,
-        updated_at: s.updated_at
-      });
-    }
-    return profiles.sort((a, b) => {
-      if (a.session_id === 'A842') return -1;
-      if (b.session_id === 'A842') return 1;
-      return b.updated_at.localeCompare(a.updated_at);
-    });
+    return [];
   }
 
   /**
-   * Authenticates a client using their nickname or session ID and 4-digit PIN (zero email required).
+   * Issues an HMAC-SHA256 signed authentication token with durable server-side retention.
+   * - Personal device (`rememberDevice = true`): 30-day sliding retention
+   * - Shared / public kiosk (`rememberDevice = false`): 12-hour retention
+   */
+  public issueAuthToken(
+    sessionId: string,
+    rememberDevice: boolean = true
+  ): { auth_token: string; expires_at: string; record: StoredAuthTokenRecord } {
+    const tokenId = crypto.randomBytes(24).toString('hex');
+    const now = Date.now();
+    const ttlMs = rememberDevice ? 30 * 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+    const issuedAt = new Date(now).toISOString();
+    const expiresAt = new Date(now + ttlMs).toISOString();
+
+    const payloadPart = Buffer.from(
+      JSON.stringify({ tid: tokenId, sid: sessionId, exp: expiresAt })
+    ).toString('base64url');
+    const signature = crypto
+      .createHmac('sha256', this.hmacSecret)
+      .update(payloadPart)
+      .digest('base64url');
+    const signedToken = `${payloadPart}.${signature}`;
+
+    const record: StoredAuthTokenRecord = {
+      token_id: tokenId,
+      session_id: sessionId,
+      issued_at: issuedAt,
+      expires_at: expiresAt,
+      remember_device: rememberDevice,
+      last_seen_at: issuedAt
+    };
+
+    this.authTokens.set(tokenId, record);
+    this.persistAuthTokens();
+    return { auth_token: signedToken, expires_at: expiresAt, record };
+  }
+
+  /**
+   * Verifies an HMAC-SHA256 Bearer token and slides its retention window if valid.
+   */
+  public verifyAuthToken(rawToken?: string | null): {
+    valid: boolean;
+    session?: ClientWorkbookSession;
+    record?: StoredAuthTokenRecord;
+  } {
+    if (!rawToken || !rawToken.includes('.')) {
+      return { valid: false };
+    }
+    const [payloadPart, sigPart] = rawToken.trim().split('.');
+    if (!payloadPart || !sigPart) return { valid: false };
+
+    const expectedSig = crypto
+      .createHmac('sha256', this.hmacSecret)
+      .update(payloadPart)
+      .digest('base64url');
+
+    try {
+      const sigBuf = Buffer.from(sigPart);
+      const expBuf = Buffer.from(expectedSig);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        return { valid: false };
+      }
+
+      const decoded = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf-8'));
+      const record = this.authTokens.get(decoded.tid);
+      if (!record) return { valid: false };
+
+      const now = Date.now();
+      if (new Date(record.expires_at).getTime() <= now) {
+        this.authTokens.delete(record.token_id);
+        this.persistAuthTokens();
+        return { valid: false };
+      }
+
+      const session = this.sessions.get(record.session_id);
+      if (!session) return { valid: false };
+
+      // Slide expiration window if remember_device is enabled
+      if (record.remember_device) {
+        record.last_seen_at = new Date(now).toISOString();
+        record.expires_at = new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString();
+        this.authTokens.set(record.token_id, record);
+        this.persistAuthTokens();
+      }
+
+      return { valid: true, session, record };
+    } catch {
+      return { valid: false };
+    }
+  }
+
+  public revokeAuthToken(rawToken?: string | null): boolean {
+    if (!rawToken || !rawToken.includes('.')) return false;
+    try {
+      const [payloadPart] = rawToken.trim().split('.');
+      const decoded = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf-8'));
+      if (decoded?.tid && this.authTokens.has(decoded.tid)) {
+        this.authTokens.delete(decoded.tid);
+        this.persistAuthTokens();
+        return true;
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  }
+
+  private checkRateLimit(key: string): { allowed: boolean; retryAfterSec?: number } {
+    const now = Date.now();
+    const entry = this.failedLogins.get(key);
+    if (!entry) return { allowed: true };
+
+    if (entry.locked_until > now) {
+      return {
+        allowed: false,
+        retryAfterSec: Math.ceil((entry.locked_until - now) / 1000)
+      };
+    }
+
+    // Reset window if > 10 minutes since first failure
+    if (now - entry.first_failed_at > 10 * 60 * 1000) {
+      this.failedLogins.delete(key);
+      return { allowed: true };
+    }
+
+    return { allowed: true };
+  }
+
+  private recordFailedAttempt(key: string): { locked: boolean; attemptsRemaining: number } {
+    const now = Date.now();
+    const existing = this.failedLogins.get(key);
+    const count = existing ? existing.count + 1 : 1;
+    const firstFailed = existing ? existing.first_failed_at : now;
+    const maxAttempts = 5;
+    const lockedUntil = count >= maxAttempts ? now + 5 * 60 * 1000 : 0;
+
+    this.failedLogins.set(key, {
+      count,
+      first_failed_at: firstFailed,
+      locked_until: lockedUntil
+    });
+
+    return {
+      locked: count >= maxAttempts,
+      attemptsRemaining: Math.max(0, maxAttempts - count)
+    };
+  }
+
+  /**
+   * Authenticates a client privately using their nickname or session ID and secret PIN.
+   * Uses salted scrypt hashing + timingSafeEqual and brute-force rate limiting.
    */
   public authenticateClientPin(
     identifier: string,
     pinCode: string
-  ): ClientWorkbookSession | null {
+  ): {
+    session: ClientWorkbookSession | null;
+    error?: string;
+    locked?: boolean;
+  } {
     const cleanId = (identifier || '').trim().toLowerCase();
     const cleanPin = (pinCode || '').trim();
-    if (!cleanId || !cleanPin) return null;
+    if (!cleanId || !cleanPin) {
+      return {
+        session: null,
+        error: 'Please enter your private Name/Handle and your secret PIN.'
+      };
+    }
+
+    const rateCheck = this.checkRateLimit(cleanId);
+    if (!rateCheck.allowed) {
+      return {
+        session: null,
+        locked: true,
+        error: `Too many incorrect PIN attempts. For your security, please wait ${rateCheck.retryAfterSec} seconds or use your Secret Recovery Word.`
+      };
+    }
 
     for (const s of this.sessions.values()) {
-      if (s.is_guest) continue;
+      if (s.is_guest || s.session_id === 'GUEST') continue;
       const matchesSession = s.session_id.toLowerCase() === cleanId;
       const matchesAlias = s.client_alias.trim().toLowerCase() === cleanId;
-      if ((matchesSession || matchesAlias) && (s.pin_code || '1234') === cleanPin) {
-        return s;
+
+      if (matchesSession || matchesAlias) {
+        const pinValid =
+          s.pin_hash && s.pin_salt
+            ? this.verifySecret(cleanPin, s.pin_hash, s.pin_salt)
+            : (s.pin_code || '1234') === cleanPin;
+
+        if (pinValid) {
+          this.failedLogins.delete(cleanId);
+          s.last_login_at = new Date().toISOString();
+          s.updated_at = s.last_login_at;
+          this.sessions.set(s.session_id, s);
+          this.persistSessions();
+          return { session: s };
+        }
       }
     }
-    return null;
+
+    const failInfo = this.recordFailedAttempt(cleanId);
+    return {
+      session: null,
+      locked: failInfo.locked,
+      error: failInfo.locked
+        ? 'Account temporarily locked for 5 minutes after 5 failed attempts. You can reset your PIN using your Recovery Word.'
+        : `Invalid Name/Handle or PIN (${failInfo.attemptsRemaining} attempts remaining before temporary lock).`
+    };
   }
 
   /**
-   * Registers a new client profile with a 4-digit PIN (or updates/upgrades a Guest session).
+   * Registers a new private client profile with a salted scrypt PIN hash and optional recovery phrase hash.
    */
-  public registerClientWithPin(payload: ClientRegistrationPayload): ClientWorkbookSession {
-    const cleanAlias = (payload.client_alias || '').trim() || 'Explorer';
-    const cleanPin = (payload.pin_code || '').replace(/\D/g, '').slice(0, 6) || '1234';
+  public registerClientWithPin(payload: ClientRegistrationPayload): {
+    session?: ClientWorkbookSession;
+    error?: string;
+  } {
+    const cleanAlias = (payload.client_alias || '').trim();
+    const cleanPin = (payload.pin_code || '').replace(/\D/g, '').slice(0, 8);
+    if (!cleanAlias) {
+      return { error: 'Please choose a private Name, Nickname, or Handle.' };
+    }
+    if (cleanPin.length < 4) {
+      return { error: 'Your secret PIN must be at least 4 digits.' };
+    }
+
+    // Prevent another person from overwriting an existing private handle unless PIN matches
+    for (const existing of this.sessions.values()) {
+      if (existing.is_guest) continue;
+      if (existing.client_alias.trim().toLowerCase() === cleanAlias.toLowerCase()) {
+        return {
+          error:
+            'That private Name/Handle is already registered. Please sign in with your PIN, or add a number/initial to make your handle unique.'
+        };
+      }
+    }
+
     const city = payload.municipality || 'Surrey';
     const barriers =
       Array.isArray(payload.active_barriers) && payload.active_barriers.length > 0
         ? payload.active_barriers
         : ['Transit Pass / Compass', 'Groceries / Meals'];
 
-    // Check if an existing profile with the same alias & PIN exists, or generate a short friendly ID
     const shortCode = `C${Math.floor(100 + Math.random() * 900)}`;
     const baseTemplate: ClientWorkbookSession =
       payload.upgrade_from_session_id && this.sessions.has(payload.upgrade_from_session_id)
         ? JSON.parse(JSON.stringify(this.sessions.get(payload.upgrade_from_session_id)!))
         : JSON.parse(JSON.stringify(INITIAL_DEMO_SESSION));
 
+    const hashedPin = this.hashSecret(cleanPin);
+    const cleanRecovery = (payload.recovery_phrase || '').trim().toLowerCase();
+    const hashedRecovery = cleanRecovery ? this.hashSecret(cleanRecovery) : undefined;
+    const nowIso = new Date().toISOString();
+
     const newSession: ClientWorkbookSession = {
       ...baseTemplate,
       session_id: shortCode,
       client_alias: cleanAlias,
       municipality: city,
-      pin_code: cleanPin,
+      pin_code: undefined,
+      pin_hash: hashedPin.hash,
+      pin_salt: hashedPin.salt,
+      recovery_phrase_hash: hashedRecovery?.hash,
+      recovery_phrase_salt: hashedRecovery?.salt,
       pin_recovery_hint:
         (payload.pin_recovery_hint || '').trim() ||
-        `4-digit PIN chosen by ${cleanAlias} during onboarding`,
+        'Protected by private PIN & recovery phrase',
       avatar_icon: payload.avatar_icon || 'Waves',
       age_group: payload.age_group || 'Adult (25–54)',
       is_guest: false,
       preferred_learning_modality:
         payload.preferred_learning_modality || baseTemplate.preferred_learning_modality,
       active_barriers: barriers,
-      updated_at: new Date().toISOString()
+      account_created_at: nowIso,
+      last_login_at: nowIso,
+      updated_at: nowIso
     };
 
-    // Match top programs for their city & barriers right away
     const ddl = this.verifyProgramsDDL(
       {
         municipality: city,
@@ -462,7 +892,107 @@ export class NavigatorDatabaseEngine {
 
     this.sessions.set(newSession.session_id, newSession);
     this.persistSessions();
-    return newSession;
+    return { session: newSession };
+  }
+
+  /**
+   * Resets a forgotten PIN using the client's private Secret Recovery Word/Phrase (zero email needed).
+   */
+  public resetPinWithRecoveryPhrase(
+    identifier: string,
+    recoveryPhrase: string,
+    newPinCode: string
+  ): { session?: ClientWorkbookSession; error?: string } {
+    const cleanId = (identifier || '').trim().toLowerCase();
+    const cleanPhrase = (recoveryPhrase || '').trim().toLowerCase();
+    const cleanNewPin = (newPinCode || '').replace(/\D/g, '').slice(0, 8);
+
+    if (!cleanId || !cleanPhrase) {
+      return { error: 'Please enter your Name/Handle and your Secret Recovery Word.' };
+    }
+    if (cleanNewPin.length < 4) {
+      return { error: 'Your new PIN must be at least 4 digits.' };
+    }
+
+    for (const s of this.sessions.values()) {
+      if (s.is_guest) continue;
+      const matchesSession = s.session_id.toLowerCase() === cleanId;
+      const matchesAlias = s.client_alias.trim().toLowerCase() === cleanId;
+
+      if (matchesSession || matchesAlias) {
+        if (!s.recovery_phrase_hash || !s.recovery_phrase_salt) {
+          return {
+            error:
+              'No recovery word was set on this account. Please ask your navigator/coordinator for a reset.'
+          };
+        }
+        const phraseValid = this.verifySecret(
+          cleanPhrase,
+          s.recovery_phrase_hash,
+          s.recovery_phrase_salt
+        );
+        if (!phraseValid) {
+          return { error: 'Recovery word did not match this account.' };
+        }
+
+        const newHash = this.hashSecret(cleanNewPin);
+        s.pin_code = undefined;
+        s.pin_hash = newHash.hash;
+        s.pin_salt = newHash.salt;
+        s.last_login_at = new Date().toISOString();
+        s.updated_at = s.last_login_at;
+        this.failedLogins.delete(cleanId);
+        this.sessions.set(s.session_id, s);
+        this.persistSessions();
+        return { session: s };
+      }
+    }
+
+    return { error: 'Could not verify Name/Handle and Recovery Word.' };
+  }
+
+  /**
+   * Changes the PIN (and optionally recovery phrase) for an already-authenticated client session.
+   */
+  public changeClientPin(
+    sessionId: string,
+    currentPin: string,
+    newPin: string,
+    newRecoveryPhrase?: string
+  ): { ok: boolean; error?: string } {
+    const s = this.sessions.get(sessionId);
+    if (!s || s.is_guest) {
+      return { ok: false, error: 'Cannot change PIN on a guest session.' };
+    }
+    const cleanCurrent = (currentPin || '').trim();
+    const cleanNew = (newPin || '').replace(/\D/g, '').slice(0, 8);
+    if (cleanNew.length < 4) {
+      return { ok: false, error: 'New PIN must be at least 4 digits.' };
+    }
+
+    const currentValid =
+      s.pin_hash && s.pin_salt
+        ? this.verifySecret(cleanCurrent, s.pin_hash, s.pin_salt)
+        : false;
+    if (!currentValid) {
+      return { ok: false, error: 'Current PIN is incorrect.' };
+    }
+
+    const newHashed = this.hashSecret(cleanNew);
+    s.pin_code = undefined;
+    s.pin_hash = newHashed.hash;
+    s.pin_salt = newHashed.salt;
+
+    if (newRecoveryPhrase && newRecoveryPhrase.trim()) {
+      const recHashed = this.hashSecret(newRecoveryPhrase.trim().toLowerCase());
+      s.recovery_phrase_hash = recHashed.hash;
+      s.recovery_phrase_salt = recHashed.salt;
+    }
+
+    s.updated_at = new Date().toISOString();
+    this.sessions.set(sessionId, s);
+    this.persistSessions();
+    return { ok: true };
   }
 
   /**

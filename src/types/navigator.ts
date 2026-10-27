@@ -129,6 +129,7 @@ export interface PublicClientProfileSummary {
 export interface ClientRegistrationPayload {
   client_alias: string;
   pin_code: string;
+  recovery_phrase?: string;
   pin_recovery_hint?: string;
   municipality: string;
   avatar_icon?: string;
@@ -136,6 +137,19 @@ export interface ClientRegistrationPayload {
   active_barriers?: string[];
   preferred_learning_modality?: LearningModality;
   upgrade_from_session_id?: string;
+  remember_device?: boolean;
+}
+
+export interface AuthSecurityStatus {
+  authenticated: boolean;
+  auth_mode: 'private_pin_token' | 'guest_anonymous';
+  token_expires_at?: string;
+  remember_device?: boolean;
+  account_created_at?: string;
+  last_login_at?: string;
+  pin_hashed: boolean;
+  has_recovery_phrase: boolean;
+  retention_status: 'durable_retained';
 }
 
 export interface ClientWorkbookSession {
@@ -144,10 +158,16 @@ export interface ClientWorkbookSession {
   coordinator_id: string;
   municipality: string;
   pin_code?: string;
+  pin_hash?: string;
+  pin_salt?: string;
+  recovery_phrase_hash?: string;
+  recovery_phrase_salt?: string;
   pin_recovery_hint?: string;
   avatar_icon?: string;
   age_group?: string;
   is_guest?: boolean;
+  account_created_at?: string;
+  last_login_at?: string;
   problem_solving_complexity: number;
   text_admin_tolerance: number;
   preferred_learning_modality: LearningModality;

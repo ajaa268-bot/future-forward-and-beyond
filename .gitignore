@@ -5,3 +5,8 @@ dist/
 .env.*
 *.log
 db/local_store/llm_endpoint_state.json
+db/local_store/auth_secret.key
+db/local_store/auth_tokens.json
+db/local_store/auth_lockouts.json
+db/local_store/*.backup.json
+

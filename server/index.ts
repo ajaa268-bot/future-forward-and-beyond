@@ -110,28 +110,77 @@ app.get('/api/programs', (_req, res) => {
 });
 
 // ============================================================================
-// PIN Authentication, Zero-Email Client Onboarding & Guest Mode Endpoints
+// Private PIN Authentication, Cryptographic Session Tokens & Retention Endpoints
 // ============================================================================
+function extractBearerToken(req: express.Request): string | null {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.slice(7).trim();
+  }
+  const customHeader = req.headers['x-auth-token'];
+  if (typeof customHeader === 'string' && customHeader.trim()) {
+    return customHeader.trim();
+  }
+  return null;
+}
+
+// Client names/profiles are strictly private — returns empty array to prevent enumeration
 app.get('/api/auth/profiles', (_req, res) => {
-  res.json({ profiles: db.listClientProfiles() });
+  res.json({ profiles: [] });
+});
+
+// Verify & Resume Retained Session Token (30-Day Personal Device / 12-Hour Shared Kiosk)
+app.get('/api/auth/session', (req, res) => {
+  const token = extractBearerToken(req);
+  const verified = db.verifyAuthToken(token);
+  if (!verified.valid || !verified.session) {
+    return res.status(401).json({
+      authenticated: false,
+      error: 'No active retained session token found.'
+    });
+  }
+
+  const ddl = computeDDLForSession(verified.session.session_id);
+  res.json({
+    authenticated: true,
+    session: db.sanitizeSession(verified.session),
+    ddl,
+    auth_token: token,
+    expires_at: verified.record?.expires_at,
+    security: db.getAuthSecurityStatus(verified.session, verified.record)
+  });
 });
 
 app.post('/api/auth/login', (req, res) => {
-  const { identifier, pin_code } = req.body || {};
+  const { identifier, pin_code, remember_device = true } = req.body || {};
   if (!identifier || !pin_code) {
-    return res.status(400).json({ error: 'Please choose your name/nickname and enter your 4-digit PIN.' });
+    return res
+      .status(400)
+      .json({ error: 'Please enter your private Name/Handle and your secret PIN.' });
   }
-  const matched = db.authenticateClientPin(String(identifier), String(pin_code));
-  if (!matched) {
-    return res.status(401).json({
-      error: 'That 4-digit PIN did not match. Try again, check your PIN hint, or continue as Guest.'
+
+  const authResult = db.authenticateClientPin(String(identifier), String(pin_code));
+  if (!authResult.session) {
+    return res.status(authResult.locked ? 429 : 401).json({
+      error:
+        authResult.error ||
+        'Invalid Name/Handle or PIN. Please check your entry or use your Recovery Word.'
     });
   }
-  const ddl = computeDDLForSession(matched.session_id);
+
+  const tokenBundle = db.issueAuthToken(
+    authResult.session.session_id,
+    Boolean(remember_device)
+  );
+  const ddl = computeDDLForSession(authResult.session.session_id);
+
   res.json({
-    session: matched,
+    session: db.sanitizeSession(authResult.session),
     ddl,
-    profiles: db.listClientProfiles()
+    auth_token: tokenBundle.auth_token,
+    expires_at: tokenBundle.expires_at,
+    security: db.getAuthSecurityStatus(authResult.session, tokenBundle.record),
+    profiles: []
   });
 });
 
@@ -139,41 +188,126 @@ app.post('/api/auth/register', (req, res) => {
   const {
     client_alias,
     pin_code,
+    recovery_phrase,
     pin_recovery_hint,
     municipality,
     avatar_icon,
     age_group,
     active_barriers,
     preferred_learning_modality,
-    upgrade_from_session_id
+    upgrade_from_session_id,
+    remember_device = true
   } = req.body || {};
 
   if (!client_alias || !String(client_alias).trim()) {
-    return res.status(400).json({ error: 'Please enter a first name or nickname.' });
+    return res.status(400).json({ error: 'Please enter a private Name, Nickname, or Handle.' });
   }
   const cleanPin = String(pin_code || '').replace(/\D/g, '');
   if (cleanPin.length < 4) {
-    return res.status(400).json({ error: 'Please choose an easy 4-digit PIN (numbers 0–9).' });
+    return res.status(400).json({ error: 'Please choose a secret PIN (at least 4 digits).' });
   }
 
-  const created = db.registerClientWithPin({
+  const regResult = db.registerClientWithPin({
     client_alias: String(client_alias).trim(),
-    pin_code: cleanPin.slice(0, 4),
+    pin_code: cleanPin.slice(0, 8),
+    recovery_phrase: recovery_phrase ? String(recovery_phrase).trim() : undefined,
     pin_recovery_hint,
     municipality: municipality || 'Surrey',
     avatar_icon,
     age_group,
     active_barriers,
     preferred_learning_modality,
-    upgrade_from_session_id
+    upgrade_from_session_id,
+    remember_device: Boolean(remember_device)
   });
 
-  const ddl = computeDDLForSession(created.session_id);
+  if (!regResult.session) {
+    return res.status(409).json({
+      error: regResult.error || 'Could not create private profile.'
+    });
+  }
+
+  const tokenBundle = db.issueAuthToken(
+    regResult.session.session_id,
+    Boolean(remember_device)
+  );
+  const ddl = computeDDLForSession(regResult.session.session_id);
+
   res.json({
-    session: created,
+    session: db.sanitizeSession(regResult.session),
     ddl,
-    profiles: db.listClientProfiles()
+    auth_token: tokenBundle.auth_token,
+    expires_at: tokenBundle.expires_at,
+    security: db.getAuthSecurityStatus(regResult.session, tokenBundle.record),
+    profiles: []
   });
+});
+
+// Self-Service Private PIN Reset using Secret Recovery Word (No Email Required)
+app.post('/api/auth/reset-pin', (req, res) => {
+  const { identifier, recovery_phrase, new_pin_code, remember_device = true } = req.body || {};
+  const resetResult = db.resetPinWithRecoveryPhrase(
+    String(identifier || ''),
+    String(recovery_phrase || ''),
+    String(new_pin_code || '')
+  );
+
+  if (!resetResult.session) {
+    return res.status(401).json({
+      error: resetResult.error || 'Could not verify Name/Handle and Recovery Word.'
+    });
+  }
+
+  const tokenBundle = db.issueAuthToken(
+    resetResult.session.session_id,
+    Boolean(remember_device)
+  );
+  const ddl = computeDDLForSession(resetResult.session.session_id);
+
+  res.json({
+    session: db.sanitizeSession(resetResult.session),
+    ddl,
+    auth_token: tokenBundle.auth_token,
+    expires_at: tokenBundle.expires_at,
+    security: db.getAuthSecurityStatus(resetResult.session, tokenBundle.record)
+  });
+});
+
+// Change PIN / Recovery Word for an Active Session
+app.post('/api/auth/change-pin', (req, res) => {
+  const token = extractBearerToken(req);
+  const verified = db.verifyAuthToken(token);
+  const { session_id, current_pin, new_pin, new_recovery_phrase } = req.body || {};
+  const targetId = verified.valid && verified.session ? verified.session.session_id : session_id;
+
+  if (!targetId) {
+    return res.status(401).json({ error: 'Please sign in first to update your security settings.' });
+  }
+
+  const result = db.changeClientPin(
+    String(targetId),
+    String(current_pin || ''),
+    String(new_pin || ''),
+    new_recovery_phrase ? String(new_recovery_phrase) : undefined
+  );
+
+  if (!result.ok) {
+    return res.status(400).json({ error: result.error || 'Could not update PIN.' });
+  }
+
+  const updatedSession = db.getSession(String(targetId));
+  res.json({
+    ok: true,
+    session: db.sanitizeSession(updatedSession),
+    security: db.getAuthSecurityStatus(updatedSession, verified.record)
+  });
+});
+
+// Revoke Active Session Token (Sign Out & Lock Sanctuary)
+app.post('/api/auth/logout', (req, res) => {
+  const token = extractBearerToken(req) || req.body?.auth_token;
+  db.revokeAuthToken(token);
+  res.json({ ok: true });
 });
 
 app.post('/api/auth/guest', (req, res) => {
@@ -181,46 +315,81 @@ app.post('/api/auth/guest', (req, res) => {
   const guestSession = db.createOrGetGuestSession(municipality);
   const ddl = computeDDLForSession(guestSession.session_id);
   res.json({
-    session: guestSession,
-    ddl
+    session: db.sanitizeSession(guestSession),
+    ddl,
+    security: db.getAuthSecurityStatus(guestSession, null)
   });
 });
 
-// Get Session + Live DDL Verification Matches
+// Get Session + Live DDL Verification Matches (Protected for Private Client Sessions)
 app.get('/api/session/:sessionId', (req, res) => {
-  const session = db.getSession(req.params.sessionId);
+  const requestedId = req.params.sessionId;
+  const token = extractBearerToken(req);
+  const verified = db.verifyAuthToken(token);
+
+  // If requesting a private non-guest, non-demo session without a matching token, return Guest/Bootstrap safely
+  if (
+    requestedId !== 'GUEST' &&
+    requestedId !== 'A842' &&
+    (!verified.valid || verified.session?.session_id !== requestedId)
+  ) {
+    return res.status(401).json({
+      error: 'Private session locked. Please sign in with your PIN.'
+    });
+  }
+
+  const session = db.getSession(requestedId);
   const ddl = computeDDLForSession(session.session_id);
-  res.json({ session, ddl });
+  res.json({
+    session: db.sanitizeSession(session),
+    ddl,
+    security: db.getAuthSecurityStatus(session, verified.record)
+  });
 });
 
 // Update Session (from Coordinator Tablet or Companion Phone)
 app.patch('/api/session/:sessionId', (req, res) => {
   const { sessionId } = req.params;
+  const token = extractBearerToken(req);
+  const verified = db.verifyAuthToken(token);
+
+  if (
+    sessionId !== 'GUEST' &&
+    sessionId !== 'A842' &&
+    (!verified.valid || verified.session?.session_id !== sessionId)
+  ) {
+    return res.status(401).json({
+      error: 'Private session locked. Please sign in with your PIN.'
+    });
+  }
+
   const updated = db.updateSession(sessionId, req.body);
+  const sanitized = db.sanitizeSession(updated);
   const ddl = computeDDLForSession(sessionId);
 
   io.to(sessionId).emit('session:updated', {
-    session: updated,
+    session: sanitized,
     ddl,
     source: req.body._source || 'api'
   });
 
-  res.json({ session: updated, ddl });
+  res.json({ session: sanitized, ddl });
 });
 
-// Reset Session to Default "Stratus #A842" Demo State
+// Reset Session to Default State
 app.post('/api/session/:sessionId/reset', (req, res) => {
   const { sessionId } = req.params;
   const reset = db.resetDemoSession(sessionId);
+  const sanitized = db.sanitizeSession(reset);
   const ddl = computeDDLForSession(sessionId);
 
   io.to(sessionId).emit('session:updated', {
-    session: reset,
+    session: sanitized,
     ddl,
     source: 'reset'
   });
 
-  res.json({ session: reset, ddl });
+  res.json({ session: sanitized, ddl });
 });
 
 // Run Dual-Axis LLM Synthesizer & DDL Tool Verification
@@ -255,15 +424,17 @@ app.post('/api/session/:sessionId/synthesize', async (req, res) => {
         : current.next_micro_step_text
     });
 
+    const sanitized = db.sanitizeSession(updated);
+
     io.to(sessionId).emit('session:updated', {
-      session: updated,
+      session: sanitized,
       ddl,
       synthesizer_telemetry: synthResult.inference_telemetry,
       source: 'synthesizer'
     });
 
     res.json({
-      session: updated,
+      session: sanitized,
       ddl,
       synthesis: synthResult
     });
@@ -342,7 +513,7 @@ io.on('connection', (socket) => {
     const updated = db.updateSession(sessionId, patchPayload);
     const ddl = computeDDLForSession(sessionId);
     io.to(sessionId).emit('session:updated', {
-      session: updated,
+      session: db.sanitizeSession(updated),
       ddl,
       source: patchPayload._source || socket.id
     });
@@ -354,7 +525,7 @@ io.on('connection', (socket) => {
     });
     const ddl = computeDDLForSession(sessionId);
     io.to(sessionId).emit('session:updated', {
-      session: updated,
+      session: db.sanitizeSession(updated),
       ddl,
       source: 'coordinator_drawer'
     });

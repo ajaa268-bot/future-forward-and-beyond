@@ -17,7 +17,9 @@ import {
   RefreshCw,
   KeyRound,
   UserPlus,
-  Compass
+  Compass,
+  Lock,
+  LogOut
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
@@ -59,6 +61,55 @@ type DirectoryCategoryFilter = SanctuaryCategoryFilter;
 
 const LOCAL_PROFILES_STORAGE_KEY = 'ffb_client_profiles_v4';
 const LOCAL_SESSIONS_STORAGE_KEY = 'ffb_client_sessions_v4';
+const LOCAL_AUTH_TOKEN_KEY = 'ffb_auth_token_v4';
+const SESSION_AUTH_TOKEN_KEY = 'ffb_session_auth_token_v4';
+const REMEMBERED_HANDLE_KEY = 'ffb_remembered_handle_v4';
+
+function getStoredAuthToken(): string | null {
+  try {
+    return (
+      localStorage.getItem(LOCAL_AUTH_TOKEN_KEY) ||
+      sessionStorage.getItem(SESSION_AUTH_TOKEN_KEY) ||
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
+function storeAuthToken(token: string, rememberDevice: boolean, handle?: string) {
+  try {
+    if (rememberDevice) {
+      localStorage.setItem(LOCAL_AUTH_TOKEN_KEY, token);
+      sessionStorage.removeItem(SESSION_AUTH_TOKEN_KEY);
+      if (handle) {
+        localStorage.setItem(REMEMBERED_HANDLE_KEY, handle);
+      }
+    } else {
+      sessionStorage.setItem(SESSION_AUTH_TOKEN_KEY, token);
+      localStorage.removeItem(LOCAL_AUTH_TOKEN_KEY);
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function clearStoredAuthToken() {
+  try {
+    localStorage.removeItem(LOCAL_AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_AUTH_TOKEN_KEY);
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function getRememberedHandle(): string {
+  try {
+    return localStorage.getItem(REMEMBERED_HANDLE_KEY) || '';
+  } catch {
+    return '';
+  }
+}
 
 const DEFAULT_FALLBACK_SESSION: ClientWorkbookSession = {
   session_id: 'A842',
@@ -141,7 +192,18 @@ async function safeFetchJson<T = any>(
   isHtmlFallback?: boolean;
 }> {
   try {
-    const res = await fetch(url, init);
+    const token = getStoredAuthToken();
+    const mergedHeaders: Record<string, string> = {
+      ...(init?.headers as Record<string, string> | undefined)
+    };
+    if (token && !mergedHeaders.Authorization) {
+      mergedHeaders.Authorization = `Bearer ${token}`;
+    }
+
+    const res = await fetch(url, {
+      ...init,
+      headers: mergedHeaders
+    });
     const rawText = await res.text();
     const trimmed = rawText.trim();
 
@@ -195,24 +257,18 @@ function loadLocalSessionsMap(): Record<string, ClientWorkbookSession> {
     // ignore storage errors
   }
   return {
-    A842: DEFAULT_FALLBACK_SESSION,
-    C640: {
-      ...DEFAULT_FALLBACK_SESSION,
-      session_id: 'C640',
-      client_alias: 'River',
-      pin_code: '2468',
-      pin_recovery_hint: 'Even numbers 2-4-6-8',
-      municipality: 'Coquitlam',
-      avatar_icon: 'Trees',
-      age_group: 'Youth & Young Adult (Under 25)'
-    }
+    A842: DEFAULT_FALLBACK_SESSION
   };
 }
 
 function saveLocalSession(sess: ClientWorkbookSession) {
   try {
     const map = loadLocalSessionsMap();
-    map[sess.session_id] = sess;
+    const sanitized = { ...sess };
+    delete sanitized.pin_code;
+    delete sanitized.pin_hash;
+    delete sanitized.pin_salt;
+    map[sess.session_id] = sanitized;
     localStorage.setItem(LOCAL_SESSIONS_STORAGE_KEY, JSON.stringify(map));
   } catch {
     // ignore storage errors
@@ -227,7 +283,9 @@ export function App() {
     immediate_relief_matches: VerifiedProgramRecord[];
   } | null>(null);
   const [allPrograms, setAllPrograms] = useState<VerifiedProgramRecord[]>([]);
-  const [profiles, setProfiles] = useState<PublicClientProfileSummary[]>(DEFAULT_FALLBACK_PROFILES);
+  const [profiles, setProfiles] = useState<PublicClientProfileSummary[]>([]);
+  const [hasUnlockedSession, setHasUnlockedSession] = useState<boolean>(false);
+  const [rememberedHandle, setRememberedHandle] = useState<string>(() => getRememberedHandle());
   const [landingInitialTab, setLandingInitialTab] = useState<'login' | 'register'>('login');
   const [upgradeFromGuestId, setUpgradeFromGuestId] = useState<string | undefined>(undefined);
   const [directorySearch, setDirectorySearch] = useState<string>('');
@@ -272,58 +330,72 @@ export function App() {
   };
 
   useEffect(() => {
-    safeFetchJson<{
-      session: ClientWorkbookSession;
-      ddl: {
-        sql_executed: string;
-        primary_matches: VerifiedProgramRecord[];
-        immediate_relief_matches: VerifiedProgramRecord[];
-      };
-    }>('/api/session/A842').then((res) => {
-      if (res.ok && res.data?.session && res.data?.ddl) {
-        setSession(res.data.session);
-        setDdl(res.data.ddl);
-        saveLocalSession(res.data.session);
-      } else {
-        setSession((prev) => prev || DEFAULT_FALLBACK_SESSION);
-        setDdl(
-          (prev) =>
-            prev || {
-              sql_executed: '-- Local Fallback Session Ready',
-              primary_matches: [],
-              immediate_relief_matches: []
-            }
-        );
-      }
-    });
+    const existingToken = getStoredAuthToken();
 
-    safeFetchJson<{ profiles: PublicClientProfileSummary[] }>('/api/auth/profiles').then(
-      (res) => {
-        if (res.ok && Array.isArray(res.data?.profiles) && res.data.profiles.length > 0) {
-          setProfiles(res.data.profiles);
-          try {
-            localStorage.setItem(
-              LOCAL_PROFILES_STORAGE_KEY,
-              JSON.stringify(res.data.profiles)
-            );
-          } catch {
-            // ignore
-          }
+    if (existingToken) {
+      // Resume retained encrypted session token automatically
+      safeFetchJson<{
+        authenticated: boolean;
+        session: ClientWorkbookSession;
+        ddl: {
+          sql_executed: string;
+          primary_matches: VerifiedProgramRecord[];
+          immediate_relief_matches: VerifiedProgramRecord[];
+        };
+      }>('/api/auth/session').then((res) => {
+        if (res.ok && res.data?.authenticated && res.data?.session && res.data?.ddl) {
+          setSession(res.data.session);
+          setDdl(res.data.ddl);
+          setHasUnlockedSession(true);
+          saveLocalSession(res.data.session);
+          setDeviceMode(res.data.session.is_guest ? 'guest_sanctuary' : 'split_copilot');
         } else {
-          try {
-            const cached = localStorage.getItem(LOCAL_PROFILES_STORAGE_KEY);
-            if (cached) {
-              const parsed = JSON.parse(cached);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setProfiles(parsed);
-              }
+          clearStoredAuthToken();
+          safeFetchJson<{
+            session: ClientWorkbookSession;
+            ddl: any;
+          }>('/api/auth/guest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ municipality: 'Surrey' })
+          }).then((guestRes) => {
+            if (guestRes.ok && guestRes.data?.session && guestRes.data?.ddl) {
+              setSession(guestRes.data.session);
+              setDdl(guestRes.data.ddl);
+            } else {
+              setSession({ ...DEFAULT_FALLBACK_SESSION, is_guest: true, client_alias: 'Guest Visitor' });
+              setDdl({
+                sql_executed: '-- Private Sanctuary Ready',
+                primary_matches: [],
+                immediate_relief_matches: []
+              });
             }
-          } catch {
-            // ignore
-          }
+          });
         }
-      }
-    );
+      });
+    } else {
+      // Initialize anonymous guest/bootstrap context while staying on private landing login
+      safeFetchJson<{
+        session: ClientWorkbookSession;
+        ddl: any;
+      }>('/api/auth/guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ municipality: 'Surrey' })
+      }).then((res) => {
+        if (res.ok && res.data?.session && res.data?.ddl) {
+          setSession(res.data.session);
+          setDdl(res.data.ddl);
+        } else {
+          setSession({ ...DEFAULT_FALLBACK_SESSION, is_guest: true, client_alias: 'Guest Visitor' });
+          setDdl({
+            sql_executed: '-- Private Sanctuary Ready',
+            primary_matches: [],
+            immediate_relief_matches: []
+          });
+        }
+      });
+    }
 
     safeFetchJson<{ programs: VerifiedProgramRecord[] }>('/api/programs').then((res) => {
       if (res.ok && Array.isArray(res.data?.programs)) {
@@ -373,24 +445,39 @@ export function App() {
 
   const handleLoginWithPin = async (
     identifier: string,
-    pinCode: string
+    pinCode: string,
+    rememberDevice: boolean = true
   ): Promise<{ ok: boolean; error?: string }> => {
     const res = await safeFetchJson<{
       session: ClientWorkbookSession;
       ddl: any;
-      profiles: PublicClientProfileSummary[];
+      auth_token?: string;
       error?: string;
     }>('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier, pin_code: pinCode })
+      body: JSON.stringify({
+        identifier,
+        pin_code: pinCode,
+        remember_device: rememberDevice
+      })
     });
 
     if (res.ok && res.data?.session) {
+      if (res.data.auth_token) {
+        storeAuthToken(
+          res.data.auth_token,
+          rememberDevice,
+          res.data.session.client_alias || res.data.session.session_id
+        );
+        setRememberedHandle(
+          rememberDevice ? res.data.session.client_alias || res.data.session.session_id : ''
+        );
+      }
+      setHasUnlockedSession(true);
       setSession(res.data.session);
       saveLocalSession(res.data.session);
       if (res.data.ddl) setDdl(res.data.ddl);
-      if (Array.isArray(res.data.profiles)) setProfiles(res.data.profiles);
       setUpgradeFromGuestId(undefined);
       setDeviceMode('split_copilot');
       return { ok: true };
@@ -398,17 +485,18 @@ export function App() {
 
     // If the server returned an HTML fallback or 404 (e.g., stale backend process), authenticate locally
     if (res.isHtmlFallback || res.status === 404 || res.status === 0) {
-      const cleanId = identifier.trim().toLowerCase();
+      const cleanId = identifier.trim().replace(/^#/, '').toLowerCase();
       const cleanPin = pinCode.replace(/\D/g, '');
       const localMap = loadLocalSessionsMap();
       const matched = Object.values(localMap).find(
         (s) =>
           (s.client_alias.toLowerCase() === cleanId ||
             s.session_id.toLowerCase() === cleanId) &&
-          (s.pin_code || '1234') === cleanPin
+          (!s.pin_code || s.pin_code === cleanPin)
       );
 
       if (matched) {
+        setHasUnlockedSession(true);
         setSession(matched);
         setDdl(computeClientFallbackDdl(matched, allPrograms));
         setUpgradeFromGuestId(undefined);
@@ -417,7 +505,7 @@ export function App() {
       }
       return {
         ok: false,
-        error: 'That 4-digit PIN did not match. Try 1234 for Stratus, or continue as Guest.'
+        error: 'Private Handle / ID or 4-digit PIN did not match.'
       };
     }
 
@@ -433,7 +521,7 @@ export function App() {
     const res = await safeFetchJson<{
       session: ClientWorkbookSession;
       ddl: any;
-      profiles: PublicClientProfileSummary[];
+      auth_token?: string;
       error?: string;
     }>('/api/auth/register', {
       method: 'POST',
@@ -442,20 +530,21 @@ export function App() {
     });
 
     if (res.ok && res.data?.session) {
+      const rememberDevice = payload.remember_device !== false;
+      if (res.data.auth_token) {
+        storeAuthToken(
+          res.data.auth_token,
+          rememberDevice,
+          res.data.session.client_alias || res.data.session.session_id
+        );
+        setRememberedHandle(
+          rememberDevice ? res.data.session.client_alias || res.data.session.session_id : ''
+        );
+      }
+      setHasUnlockedSession(true);
       setSession(res.data.session);
       saveLocalSession(res.data.session);
       if (res.data.ddl) setDdl(res.data.ddl);
-      if (Array.isArray(res.data.profiles)) {
-        setProfiles(res.data.profiles);
-        try {
-          localStorage.setItem(
-            LOCAL_PROFILES_STORAGE_KEY,
-            JSON.stringify(res.data.profiles)
-          );
-        } catch {
-          // ignore
-        }
-      }
       setUpgradeFromGuestId(undefined);
       setDeviceMode('split_copilot');
       return { ok: true };
@@ -464,7 +553,6 @@ export function App() {
     // Seamless client-side PIN registration fallback if server endpoint returned HTML/404
     if (res.isHtmlFallback || res.status === 404 || res.status === 0) {
       const cleanAlias = payload.client_alias.trim() || 'Navigator Guest';
-      const cleanPin = payload.pin_code.replace(/\D/g, '').slice(0, 4) || '1234';
       const prefix = cleanAlias.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 1) || 'C';
       const randomNum = Math.floor(100 + Math.random() * 899);
       const newSessionId = `${prefix}${randomNum}`;
@@ -472,9 +560,8 @@ export function App() {
         ...DEFAULT_FALLBACK_SESSION,
         session_id: newSessionId,
         client_alias: cleanAlias,
-        pin_code: cleanPin,
         pin_recovery_hint:
-          payload.pin_recovery_hint?.trim() || 'Check your pocket card or ask your coordinator',
+          payload.pin_recovery_hint?.trim() || 'Protected with your private recovery word',
         municipality: payload.municipality || 'Surrey',
         avatar_icon: payload.avatar_icon || 'Waves',
         age_group: payload.age_group || 'Adult (25–54)',
@@ -489,26 +576,7 @@ export function App() {
       };
 
       saveLocalSession(createdSession);
-      const newProfile: PublicClientProfileSummary = {
-        session_id: createdSession.session_id,
-        client_alias: createdSession.client_alias,
-        municipality: createdSession.municipality,
-        avatar_icon: createdSession.avatar_icon || 'Waves',
-        age_group: createdSession.age_group || 'Adult (25–54)',
-        pin_recovery_hint: createdSession.pin_recovery_hint || '',
-        is_guest: false,
-        updated_at: createdSession.updated_at
-      };
-      const nextProfiles = [
-        newProfile,
-        ...profiles.filter((p) => p.session_id !== newProfile.session_id)
-      ];
-      setProfiles(nextProfiles);
-      try {
-        localStorage.setItem(LOCAL_PROFILES_STORAGE_KEY, JSON.stringify(nextProfiles));
-      } catch {
-        // ignore
-      }
+      setHasUnlockedSession(true);
       setSession(createdSession);
       setDdl(computeClientFallbackDdl(createdSession, allPrograms));
       setUpgradeFromGuestId(undefined);
@@ -518,8 +586,68 @@ export function App() {
 
     return {
       ok: false,
-      error: res.error || 'Could not create PIN profile.'
+      error: res.error || 'Could not create private PIN account.'
     };
+  };
+
+  const handleResetPinWithRecovery = async (
+    identifier: string,
+    recoveryPhrase: string,
+    newPinCode: string,
+    rememberDevice: boolean = true
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const res = await safeFetchJson<{
+      session: ClientWorkbookSession;
+      ddl: any;
+      auth_token?: string;
+      error?: string;
+    }>('/api/auth/reset-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        identifier,
+        recovery_phrase: recoveryPhrase,
+        new_pin_code: newPinCode,
+        remember_device: rememberDevice
+      })
+    });
+
+    if (res.ok && res.data?.session) {
+      if (res.data.auth_token) {
+        storeAuthToken(
+          res.data.auth_token,
+          rememberDevice,
+          res.data.session.client_alias || res.data.session.session_id
+        );
+        setRememberedHandle(
+          rememberDevice ? res.data.session.client_alias || res.data.session.session_id : ''
+        );
+      }
+      setHasUnlockedSession(true);
+      setSession(res.data.session);
+      saveLocalSession(res.data.session);
+      if (res.data.ddl) setDdl(res.data.ddl);
+      setUpgradeFromGuestId(undefined);
+      setDeviceMode('split_copilot');
+      return { ok: true };
+    }
+
+    return {
+      ok: false,
+      error:
+        res.error ||
+        'Could not reset PIN. Verify your private Handle/ID and Secret Recovery Word.'
+    };
+  };
+
+  const handleLogoutAndLock = async () => {
+    await safeFetchJson('/api/auth/logout', { method: 'POST' });
+    clearStoredAuthToken();
+    setHasUnlockedSession(false);
+    setRememberedHandle('');
+    setLandingInitialTab('login');
+    setUpgradeFromGuestId(undefined);
+    setDeviceMode('landing_auth');
   };
 
   const handleContinueAsGuest = async (municipality?: string) => {
@@ -702,10 +830,12 @@ export function App() {
         upgradeFromGuestSessionId={upgradeFromGuestId}
         initialGuestCity={session.municipality}
         initialGuestBarriers={session.active_barriers}
+        rememberedDeviceHandle={rememberedHandle}
         onLoginWithPin={handleLoginWithPin}
         onRegisterWithPin={handleRegisterWithPin}
+        onResetPinWithRecovery={handleResetPinWithRecovery}
         onContinueAsGuest={handleContinueAsGuest}
-        hasActiveSession={Boolean(session)}
+        hasActiveSession={hasUnlockedSession}
         activeSessionAlias={session.client_alias}
         onReturnToActiveSession={() =>
           setDeviceMode(session.is_guest ? 'guest_sanctuary' : 'split_copilot')
@@ -801,6 +931,18 @@ export function App() {
               <UserPlus className="w-3.5 h-3.5 text-[#1ca796]" />
               <span>New Client PIN</span>
             </button>
+
+            {hasUnlockedSession && (
+              <button
+                type="button"
+                onClick={handleLogoutAndLock}
+                className="px-3 py-1.5 rounded-full bg-[#fff1f2] hover:bg-[#ffe4e6] border border-[#fecdd3] text-[#9f1239] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+                title="Revoke encrypted device session token and lock your private workspace"
+              >
+                <Lock className="w-3.5 h-3.5 text-[#be123c]" />
+                <span>Lock &amp; Sign Out</span>
+              </button>
+            )}
 
             {/* Daily Auto-Refresh & Import Button */}
             <button
