@@ -157,3 +157,45 @@ export interface DDLQueryFilterParams {
   provides_living_stipend?: boolean;
   category?: ProgramCategory;
 }
+
+export interface FeedConnectorStatus {
+  id: string;
+  name: string;
+  provider: string;
+  protocol: string;
+  endpoint_url: string;
+  status: 'online' | 'synced' | 'standby' | 'error';
+  last_checked_at: string;
+  remote_last_modified?: string;
+  records_tracked: number;
+  changes_detected: number;
+  message: string;
+}
+
+export interface SyncChangeItem {
+  timestamp: string;
+  program_id: string;
+  program_name: string;
+  municipality: string;
+  change_type: 'added' | 'updated' | 'verified';
+  source_feed: string;
+  summary: string;
+}
+
+export interface DailySyncState {
+  auto_daily_enabled: boolean;
+  interval_hours: number;
+  last_sync_at: string;
+  next_scheduled_sync_at: string;
+  last_sync_trigger: 'startup' | 'scheduled_daily' | 'manual_refresh' | 'custom_import';
+  total_programs_count: number;
+  last_run_summary: {
+    added_count: number;
+    updated_count: number;
+    verified_unchanged_count: number;
+    duration_ms: number;
+  };
+  connectors: FeedConnectorStatus[];
+  recent_changes: SyncChangeItem[];
+}
+

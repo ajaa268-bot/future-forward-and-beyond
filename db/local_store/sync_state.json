@@ -1,0 +1,123 @@
+{
+  "auto_daily_enabled": true,
+  "interval_hours": 24,
+  "last_sync_at": "2026-10-27T08:18:45.945Z",
+  "next_scheduled_sync_at": "2026-10-28T08:18:46.331Z",
+  "last_sync_trigger": "manual_refresh",
+  "total_programs_count": 78,
+  "last_run_summary": {
+    "added_count": 0,
+    "updated_count": 0,
+    "verified_unchanged_count": 78,
+    "duration_ms": 387
+  },
+  "connectors": [
+    {
+      "id": "bc211-hsds",
+      "name": "BC211 / 211 Canada HSDS v3.0 Feed",
+      "provider": "211 British Columbia (Open Referral HSDS)",
+      "protocol": "HSDS v3.0 JSON / REST",
+      "endpoint_url": "https://bc.211.ca/open-referral/hsds/v3/services",
+      "status": "synced",
+      "last_checked_at": "2026-10-27T08:18:45.945Z",
+      "remote_last_modified": "2026-10-27",
+      "records_tracked": 52,
+      "changes_detected": 0,
+      "message": "Synced 52 immediate relief, shelter, food bank, crisis & recovery services."
+    },
+    {
+      "id": "bc-data-catalogue",
+      "name": "BC Data Catalogue (WorkBC, Health & Clinics)",
+      "provider": "Province of British Columbia Open Data",
+      "protocol": "CKAN REST API v3",
+      "endpoint_url": "https://catalogue.data.gov.bc.ca/api/3/action/package_search",
+      "status": "online",
+      "last_checked_at": "2026-10-27T08:18:45.945Z",
+      "remote_last_modified": "2026-10-27",
+      "records_tracked": 22,
+      "changes_detected": 0,
+      "message": "Connected to catalogue.data.gov.bc.ca (22 datasets checked)"
+    },
+    {
+      "id": "health-authorities-bc",
+      "name": "Fraser Health & VCH Clinical Directory",
+      "provider": "Fraser Health / Vancouver Coastal Health / LifeLabs",
+      "protocol": "JSON Directory Sync",
+      "endpoint_url": "https://www.fraserhealth.ca/health-topics-a-to-z",
+      "status": "synced",
+      "last_checked_at": "2026-10-27T08:18:45.945Z",
+      "remote_last_modified": "2026-10-27",
+      "records_tracked": 16,
+      "changes_detected": 0,
+      "message": "Hospitals (SMH, Peace Arch, Langley, Delta, RCH, Burnaby, VGH), UPCCs & LifeLabs synced."
+    },
+    {
+      "id": "options-sources-bc",
+      "name": "Options Community Services & Sources BC",
+      "provider": "Options+ / Sources BC / Community Societies",
+      "protocol": "Agency Feed Sync",
+      "endpoint_url": "https://www.options.bc.ca / https://www.sourcesbc.ca",
+      "status": "synced",
+      "last_checked_at": "2026-10-27T08:18:45.945Z",
+      "remote_last_modified": "2026-10-27",
+      "records_tracked": 14,
+      "changes_detected": 0,
+      "message": "Surrey, White Rock, Langley, and Delta housing, pregnancy, youth & seniors hubs verified."
+    },
+    {
+      "id": "education-skilledtrades-bc",
+      "name": "EducationPlannerBC & SkilledTradesBC",
+      "provider": "KPU, BCIT, Douglas, VCC, SFU, UBC & Trades",
+      "protocol": "XML / JSON Program Feed",
+      "endpoint_url": "https://www.educationplannerbc.ca / https://skilledtradesbc.ca",
+      "status": "synced",
+      "last_checked_at": "2026-10-27T08:18:45.945Z",
+      "remote_last_modified": "2026-10-27",
+      "records_tracked": 12,
+      "changes_detected": 0,
+      "message": "Adult tuition-free upgrading, trades foundation cohorts & oral exam accommodations synced."
+    },
+    {
+      "id": "open-canada-ckan",
+      "name": "Gov of Canada Open Data (NOC & Benefits)",
+      "provider": "Employment & Social Development Canada",
+      "protocol": "CKAN REST API v3",
+      "endpoint_url": "https://open.canada.ca/data/api/action/package_search",
+      "status": "online",
+      "last_checked_at": "2026-10-27T08:18:45.945Z",
+      "remote_last_modified": "2022-02-21",
+      "records_tracked": 14,
+      "changes_detected": 0,
+      "message": "Connected to open.canada.ca CKAN API (377 NOC & benefit datasets verified)"
+    }
+  ],
+  "recent_changes": [
+    {
+      "timestamp": "2026-10-27T08:18:45.945Z",
+      "program_id": "daily-check-summary",
+      "program_name": "All 78 Lower Mainland Programs Verified",
+      "municipality": "All Lower Mainland Cities",
+      "change_type": "verified",
+      "source_feed": "BC Data Catalogue CKAN + BC211 HSDS",
+      "summary": "Checked 78 services across 11 categories — no phone, waitlist, or status changes detected today; refreshed <14d verification window."
+    },
+    {
+      "timestamp": "2026-10-27T08:18:35.562Z",
+      "program_id": "prog-hospital-peace-arch-51b",
+      "program_name": "Peace Arch Hospital (White Rock / South Surrey) — 24/7 Emergency & Maternity",
+      "municipality": "White Rock / South Surrey",
+      "change_type": "verified",
+      "source_feed": "Fraser Health & VCH Clinical Directory",
+      "summary": "Verified dedicated city hospital listing & direct switchboard (604-531-5512)"
+    },
+    {
+      "timestamp": "2026-10-27T08:18:35.562Z",
+      "program_id": "prog-counseling-moving-forward-47",
+      "program_name": "Moving Forward Family Services — Free & Low-Barrier Counseling",
+      "municipality": "Surrey",
+      "change_type": "verified",
+      "source_feed": "BC211 / 211 Canada HSDS v3.0 Feed",
+      "summary": "Verified free counseling intake & intern sessions across Lower Mainland (778-321-3054)"
+    }
+  ]
+}

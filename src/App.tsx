@@ -13,12 +13,14 @@ import {
   Search,
   Pin,
   Phone,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
   VerifiedProgramRecord,
-  ModuleCode
+  ModuleCode,
+  DailySyncState
 } from './types/navigator.js';
 import {
   CATEGORY_FILTER_PILLS,
@@ -34,6 +36,7 @@ import {
 import { WorkbookModulesCanvas } from './components/WorkbookModulesCanvas.js';
 import { CoordinatorTriagePanel } from './components/CoordinatorTriagePanel.js';
 import { ClientCompanionPhone } from './components/ClientCompanionPhone.js';
+import { DailySyncModal } from './components/DailySyncModal.js';
 
 type DeviceMode = 'split_copilot' | 'tablet_only' | 'phone_only' | 'architecture_ddl';
 type DirectoryCategoryFilter = SanctuaryCategoryFilter;
@@ -60,6 +63,9 @@ export function App() {
     think_suppressed: boolean;
     latency_ms: number;
   } | null>(null);
+  const [syncState, setSyncState] = useState<DailySyncState | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetch('/api/session/A842')
@@ -79,6 +85,15 @@ export function App() {
       })
       .catch(console.error);
 
+    fetch('/api/sync/status')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.sync_state) {
+          setSyncState(data.sync_state);
+        }
+      })
+      .catch(console.error);
+
     const sock: Socket = io('/', {
       query: { sessionId: 'A842' }
     });
@@ -90,11 +105,71 @@ export function App() {
       if (payload.ddl) setDdl(payload.ddl);
       if (payload.synthesizer_telemetry) setTelemetry(payload.synthesizer_telemetry);
     });
+    sock.on('programs:synced', (payload: any) => {
+      if (payload.sync_state) setSyncState(payload.sync_state);
+      if (Array.isArray(payload.programs)) setAllPrograms(payload.programs);
+      if (payload.ddl) setDdl(payload.ddl);
+    });
 
     return () => {
       sock.disconnect();
     };
   }, []);
+
+  const handleRunDailySyncNow = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/sync/run', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.sync_state) setSyncState(data.sync_state);
+        if (Array.isArray(data.programs)) setAllPrograms(data.programs);
+        if (data.ddl) setDdl(data.ddl);
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleToggleSyncSchedule = async (enabled: boolean, intervalHours: number) => {
+    const res = await fetch('/api/sync/schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        auto_daily_enabled: enabled,
+        interval_hours: intervalHours
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.sync_state) setSyncState(data.sync_state);
+    }
+  };
+
+  const handleImportServices = async (payload: any, sourceName: string) => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/sync/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload, source_name: sourceName })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.state) setSyncState(data.state);
+        if (Array.isArray(data.programs)) setAllPrograms(data.programs);
+        if (data.ddl) setDdl(data.ddl);
+        return {
+          added_count: data.added_count ?? 0,
+          updated_count: data.updated_count ?? 0,
+          verified_unchanged_count: data.verified_unchanged_count ?? 0
+        };
+      }
+      return null;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handlePatchSession = async (patch: Partial<ClientWorkbookSession>) => {
     if (!session) return;
@@ -200,6 +275,20 @@ export function App() {
                 Welcome, <strong>{session.client_alias}</strong>
               </span>
             </div>
+
+            {/* Daily Auto-Refresh & Import Button */}
+            <button
+              type="button"
+              onClick={() => setIsSyncModalOpen(true)}
+              title="Daily Service Auto-Refresh & Live Import Center"
+              className="px-3.5 py-1.5 rounded-full bg-[#e3f7f4] hover:bg-[#d2f2ed] border border-[#9ddbd1] text-[#116358] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>Daily Sync &amp; Import</span>
+              {syncState?.auto_daily_enabled && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#15803d]" />
+              )}
+            </button>
 
             {/* Response Speed Toggle */}
             <button
@@ -446,20 +535,28 @@ export function App() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-bold text-[#14343d]">
-                    Complete Lower Mainland Sanctuary Directory (78 Verified Programs Grouped by Category)
+                    Complete Lower Mainland Sanctuary Directory ({allPrograms.length || 78} Verified Programs Grouped by Category)
                   </h3>
                   <p className="text-xs text-[#4b6a73] mt-0.5">
                     Every program and phone number is grouped by its dedicated category—Hospitals &amp; Labs, Free Counselors, Pregnancy &amp; Baby Care, Shelters, Food Banks, Subsidies, Options+, Sources BC &amp; Schools.
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSyncModalOpen(true)}
+                    className="px-3 py-1.5 rounded-xl bg-[#e3f7f4] hover:bg-[#d0f0eb] border border-[#9ddbd1] text-xs font-semibold text-[#116358] flex items-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                    <span>Refresh &amp; Import Services</span>
+                  </button>
                   <span className="text-xs font-medium text-[#4a656d]">Filter City:</span>
                   <select
                     value={directoryCity}
                     onChange={(e) => setDirectoryCity(e.target.value)}
                     className="bg-[#f7f4ed] border border-[#dcd4c4] rounded-xl px-3 py-1.5 text-xs font-semibold text-[#163038] cursor-pointer focus:outline-none focus:border-[#2a9d8f]"
                   >
-                    <option value="All">All Lower Mainland Cities (78 Programs)</option>
+                    <option value="All">All Lower Mainland Cities ({allPrograms.length || 78} Programs)</option>
                     <option value="Surrey">Surrey (Whalley, Newton, Guildford, Cloverdale)</option>
                     <option value="White Rock / South Surrey">White Rock / South Surrey</option>
                     <option value="Langley">Langley</option>
@@ -833,6 +930,17 @@ export function App() {
           </div>
         )}
       </main>
+
+      {/* Daily Auto-Refresh & Live Import Modal */}
+      <DailySyncModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        syncState={syncState}
+        isSyncing={isSyncing}
+        onRunSyncNow={handleRunDailySyncNow}
+        onToggleSchedule={handleToggleSyncSchedule}
+        onImportPayload={handleImportServices}
+      />
 
       {/* Calm Sandy Beach Shoreline Footer */}
       <footer className="mt-8 border-t border-[#e2d4be] bg-gradient-to-b from-[#f3eadb] to-[#eadcc5] py-5 px-6 text-center text-xs text-[#546f76]">

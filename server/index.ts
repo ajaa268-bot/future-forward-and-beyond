@@ -4,6 +4,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { NavigatorDatabaseEngine } from './dbEngine.js';
+import { DailySyncService } from './dailySyncService.js';
 import {
   synthesizeDualAxisBlueprint,
   MASTER_SYSTEM_PROMPT,
@@ -70,6 +71,15 @@ function computeDDLForSession(sessionId: string) {
 
   return db.verifyProgramsDDL(filters, session);
 }
+
+const syncService = new DailySyncService(db, (syncState, programs) => {
+  const ddl = computeDDLForSession('A842');
+  io.emit('programs:synced', {
+    sync_state: syncState,
+    programs,
+    ddl
+  });
+});
 
 // Health & System Metadata (Railway Healthcheck Endpoint)
 app.get('/api/health', (_req, res) => {
@@ -192,6 +202,58 @@ app.post('/api/ddl/verify', (req, res) => {
   const session = db.getSession(sessionId);
   const result = db.verifyProgramsDDL(filters, session);
   res.json(result);
+});
+
+// Daily Auto-Refresh & Live Service Import Endpoints
+app.get('/api/sync/status', (_req, res) => {
+  res.json({
+    sync_state: syncService.getStatus(),
+    programs_count: db.getAllPrograms().length
+  });
+});
+
+app.post('/api/sync/run', async (_req, res) => {
+  try {
+    const syncState = await syncService.runSyncCheck('manual_refresh');
+    const ddl = computeDDLForSession('A842');
+    res.json({
+      sync_state: syncState,
+      programs: db.getAllPrograms(),
+      ddl
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Daily sync check failed' });
+  }
+});
+
+app.post('/api/sync/import', (req, res) => {
+  try {
+    const { payload, source_name } = req.body;
+    if (!payload) {
+      return res.status(400).json({ error: 'Missing payload to import' });
+    }
+    const result = syncService.importExternalServices(
+      payload,
+      source_name || 'Coordinator Direct Import'
+    );
+    const ddl = computeDDLForSession('A842');
+    res.json({
+      ...result,
+      programs: db.getAllPrograms(),
+      ddl
+    });
+  } catch (err: any) {
+    res.status(400).json({ error: err?.message || 'Import failed' });
+  }
+});
+
+app.post('/api/sync/schedule', (req, res) => {
+  const { auto_daily_enabled, interval_hours } = req.body;
+  const updatedState = syncService.updateScheduleConfig(
+    Boolean(auto_daily_enabled),
+    Number(interval_hours || 24)
+  );
+  res.json({ sync_state: updatedState });
 });
 
 // WebSocket Real-Time Co-Pilot Sync Layer
