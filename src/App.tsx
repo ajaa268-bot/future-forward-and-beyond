@@ -14,13 +14,18 @@ import {
   Pin,
   Phone,
   X,
-  RefreshCw
+  RefreshCw,
+  KeyRound,
+  UserPlus,
+  Compass
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
   VerifiedProgramRecord,
   ModuleCode,
-  DailySyncState
+  DailySyncState,
+  PublicClientProfileSummary,
+  ClientRegistrationPayload
 } from './types/navigator.js';
 import {
   CATEGORY_FILTER_PILLS,
@@ -37,8 +42,19 @@ import { WorkbookModulesCanvas } from './components/WorkbookModulesCanvas.js';
 import { CoordinatorTriagePanel } from './components/CoordinatorTriagePanel.js';
 import { ClientCompanionPhone } from './components/ClientCompanionPhone.js';
 import { DailySyncModal } from './components/DailySyncModal.js';
+import {
+  LandingAndOnboardingView,
+  renderAvatarIcon
+} from './components/LandingAndOnboardingView.js';
+import { GuestSanctuaryView } from './components/GuestSanctuaryView.js';
 
-type DeviceMode = 'split_copilot' | 'tablet_only' | 'phone_only' | 'architecture_ddl';
+type DeviceMode =
+  | 'landing_auth'
+  | 'guest_sanctuary'
+  | 'split_copilot'
+  | 'tablet_only'
+  | 'phone_only'
+  | 'architecture_ddl';
 type DirectoryCategoryFilter = SanctuaryCategoryFilter;
 
 export function App() {
@@ -49,11 +65,14 @@ export function App() {
     immediate_relief_matches: VerifiedProgramRecord[];
   } | null>(null);
   const [allPrograms, setAllPrograms] = useState<VerifiedProgramRecord[]>([]);
+  const [profiles, setProfiles] = useState<PublicClientProfileSummary[]>([]);
+  const [landingInitialTab, setLandingInitialTab] = useState<'login' | 'register'>('login');
+  const [upgradeFromGuestId, setUpgradeFromGuestId] = useState<string | undefined>(undefined);
   const [directorySearch, setDirectorySearch] = useState<string>('');
   const [directoryCategory, setDirectoryCategory] =
     useState<DirectoryCategoryFilter>('ALL');
   const [directoryCity, setDirectoryCity] = useState<string>('All');
-  const [deviceMode, setDeviceMode] = useState<DeviceMode>('split_copilot');
+  const [deviceMode, setDeviceMode] = useState<DeviceMode>('landing_auth');
   const [enableThinking, setEnableThinking] = useState<boolean>(false);
   const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
   const [socketConnected, setSocketConnected] = useState<boolean>(false);
@@ -76,6 +95,15 @@ export function App() {
       })
       .catch(console.error);
 
+    fetch('/api/auth/profiles')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.profiles)) {
+          setProfiles(data.profiles);
+        }
+      })
+      .catch(console.error);
+
     fetch('/api/programs')
       .then((r) => r.json())
       .then((data) => {
@@ -93,9 +121,12 @@ export function App() {
         }
       })
       .catch(console.error);
+  }, []);
 
+  useEffect(() => {
+    const activeId = session?.session_id || 'A842';
     const sock: Socket = io('/', {
-      query: { sessionId: 'A842' }
+      query: { sessionId: activeId }
     });
 
     sock.on('connect', () => setSocketConnected(true));
@@ -114,7 +145,75 @@ export function App() {
     return () => {
       sock.disconnect();
     };
-  }, []);
+  }, [session?.session_id]);
+
+  const handleLoginWithPin = async (
+    identifier: string,
+    pinCode: string
+  ): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, pin_code: pinCode })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { ok: false, error: data.error || 'Could not sign in with that PIN.' };
+      }
+      if (data.session) setSession(data.session);
+      if (data.ddl) setDdl(data.ddl);
+      if (Array.isArray(data.profiles)) setProfiles(data.profiles);
+      setUpgradeFromGuestId(undefined);
+      setDeviceMode('split_copilot');
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || 'Network error while signing in.' };
+    }
+  };
+
+  const handleRegisterWithPin = async (
+    payload: ClientRegistrationPayload
+  ): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { ok: false, error: data.error || 'Could not create PIN profile.' };
+      }
+      if (data.session) setSession(data.session);
+      if (data.ddl) setDdl(data.ddl);
+      if (Array.isArray(data.profiles)) setProfiles(data.profiles);
+      setUpgradeFromGuestId(undefined);
+      setDeviceMode('split_copilot');
+      return { ok: true };
+    } catch (err: any) {
+      return { ok: false, error: err?.message || 'Network error while registering.' };
+    }
+  };
+
+  const handleContinueAsGuest = async (municipality?: string) => {
+    try {
+      const res = await fetch('/api/auth/guest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ municipality })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.session) setSession(data.session);
+        if (data.ddl) setDdl(data.ddl);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setUpgradeFromGuestId(undefined);
+    setDeviceMode('guest_sanctuary');
+  };
 
   const handleRunDailySyncNow = async () => {
     setIsSyncing(true);
@@ -238,15 +337,44 @@ export function App() {
     );
   }
 
+  if (deviceMode === 'landing_auth') {
+    return (
+      <LandingAndOnboardingView
+        profiles={profiles}
+        initialTab={landingInitialTab}
+        upgradeFromGuestSessionId={upgradeFromGuestId}
+        initialGuestCity={session.municipality}
+        initialGuestBarriers={session.active_barriers}
+        onLoginWithPin={handleLoginWithPin}
+        onRegisterWithPin={handleRegisterWithPin}
+        onContinueAsGuest={handleContinueAsGuest}
+        hasActiveSession={Boolean(session)}
+        activeSessionAlias={session.client_alias}
+        onReturnToActiveSession={() =>
+          setDeviceMode(session.is_guest ? 'guest_sanctuary' : 'split_copilot')
+        }
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-x-hidden">
       {/* Top Frosted Sea-Glass Header Bar */}
       <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-[#d5ebe6] shadow-2xs px-4 lg:px-6 py-3">
         <div className="max-w-[1680px] mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl ocean-btn flex items-center justify-center text-white font-bold text-base tracking-tight relative overflow-hidden">
+            <button
+              type="button"
+              onClick={() => {
+                setLandingInitialTab('login');
+                setUpgradeFromGuestId(undefined);
+                setDeviceMode('landing_auth');
+              }}
+              title="Return to Main Landing & PIN Sign-In Page"
+              className="w-11 h-11 rounded-2xl ocean-btn flex items-center justify-center text-white font-bold text-base tracking-tight relative overflow-hidden cursor-pointer"
+            >
               <Waves className="w-5 h-5" />
-            </div>
+            </button>
             <div>
               <div className="flex items-center gap-2.5">
                 <h1 className="text-base sm:text-lg font-bold tracking-tight text-[#12323b]">
@@ -263,28 +391,69 @@ export function App() {
           </div>
 
           {/* Simple Controls */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Sync Status Pill */}
-            <div className="px-3.5 py-1.5 rounded-full bg-[#faf6ee] border border-[#e2d6c1] text-xs flex items-center gap-2 text-[#335059] shadow-2xs">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Active Client / Guest Badge + Switch User Button */}
+            <div className="px-3 py-1.5 rounded-full bg-[#faf6ee] border border-[#e2d6c1] text-xs flex items-center gap-2 text-[#335059] shadow-2xs">
               <span
                 className={`w-2 h-2 rounded-full ${
                   socketConnected ? 'bg-[#1ca796] animate-pulse' : 'bg-[#3b82a6]'
                 }`}
               />
+              <span className="text-[#156e62]">
+                {renderAvatarIcon(session.avatar_icon, 'w-3.5 h-3.5')}
+              </span>
               <span className="font-medium">
-                Welcome, <strong>{session.client_alias}</strong>
+                <strong>{session.client_alias}</strong>
+                {session.is_guest ? (
+                  <span className="ml-1.5 text-[10px] px-2 py-0.5 rounded-full bg-[#fff1d0] text-[#8a520d] border border-[#f2c977] font-bold">
+                    Guest Mode
+                  </span>
+                ) : (
+                  <span className="ml-1.5 text-[10px] px-2 py-0.5 rounded-full bg-[#dff7f4] text-[#116358] border border-[#9ddbd1] font-bold">
+                    PIN #{session.session_id}
+                  </span>
+                )}
               </span>
             </div>
+
+            {/* Quick Landing / PIN Login & Onboarding Buttons */}
+            <button
+              type="button"
+              onClick={() => {
+                setLandingInitialTab('login');
+                setUpgradeFromGuestId(undefined);
+                setDeviceMode('landing_auth');
+              }}
+              className="px-3 py-1.5 rounded-full bg-white hover:bg-[#e3f7f4] border border-[#bce5dd] text-[#0f5e53] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+              title="Open Main Landing & 4-Digit PIN Login"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-[#1ca796]" />
+              <span>PIN Login</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLandingInitialTab('register');
+                setUpgradeFromGuestId(session.is_guest ? session.session_id : undefined);
+                setDeviceMode('landing_auth');
+              }}
+              className="px-3 py-1.5 rounded-full bg-[#faf6ee] hover:bg-[#efe5d2] border border-[#dfd2bc] text-[#2b4c55] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+              title="Onboard a New Client with a 4-Digit PIN (No Email Required)"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-[#1ca796]" />
+              <span>New Client PIN</span>
+            </button>
 
             {/* Daily Auto-Refresh & Import Button */}
             <button
               type="button"
               onClick={() => setIsSyncModalOpen(true)}
               title="Daily Service Auto-Refresh & Live Import Center"
-              className="px-3.5 py-1.5 rounded-full bg-[#e3f7f4] hover:bg-[#d2f2ed] border border-[#9ddbd1] text-[#116358] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+              className="px-3 py-1.5 rounded-full bg-[#e3f7f4] hover:bg-[#d2f2ed] border border-[#9ddbd1] text-[#116358] text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>Daily Sync &amp; Import</span>
+              <span>Daily Sync</span>
               {syncState?.auto_daily_enabled && (
                 <span className="w-1.5 h-1.5 rounded-full bg-[#15803d]" />
               )}
@@ -294,7 +463,7 @@ export function App() {
             <button
               onClick={() => setEnableThinking(!enableThinking)}
               title="Switch between Quick Match and Detailed Match"
-              className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
+              className={`px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
                 enableThinking
                   ? 'bg-[#e5f3fb] border-[#9cc9e4] text-[#195375]'
                   : 'bg-[#e3f7f4] border-[#ade3da] text-[#14695e]'
@@ -306,6 +475,16 @@ export function App() {
 
             {/* View Switcher */}
             <div className="flex bg-[#f3eadb] p-1 rounded-2xl border border-[#dfd2bc]">
+              <button
+                onClick={() => setDeviceMode('guest_sanctuary')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
+                  deviceMode === 'guest_sanctuary'
+                    ? 'ocean-btn text-white font-semibold'
+                    : 'text-[#4c6770] hover:text-[#14343d]'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5" /> Guest Page
+              </button>
               <button
                 onClick={() => setDeviceMode('split_copilot')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
@@ -470,6 +649,29 @@ export function App() {
 
       {/* Main Content Workspace on Warm Sandy Shore */}
       <main className="flex-1 max-w-[1680px] w-full mx-auto p-4 lg:p-6">
+        {deviceMode === 'guest_sanctuary' && (
+          <GuestSanctuaryView
+            session={session}
+            allPrograms={
+              allPrograms.length > 0
+                ? allPrograms
+                : [...ddl.immediate_relief_matches, ...ddl.primary_matches]
+            }
+            onPatchSession={handlePatchSession}
+            onUpgradeToPinAccount={() => {
+              setLandingInitialTab('register');
+              setUpgradeFromGuestId(session.session_id);
+              setDeviceMode('landing_auth');
+            }}
+            onOpenInteractiveWorkbookAsGuest={() => setDeviceMode('split_copilot')}
+            onGoToLandingLogin={() => {
+              setLandingInitialTab('login');
+              setUpgradeFromGuestId(undefined);
+              setDeviceMode('landing_auth');
+            }}
+          />
+        )}
+
         {deviceMode === 'split_copilot' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left 8 Cols: Shared Workbook Screen */}

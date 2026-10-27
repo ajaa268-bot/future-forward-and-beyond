@@ -109,11 +109,45 @@ export interface LoadoutCardItem {
   tagline: string;
 }
 
+export type ClientAgeGroup =
+  | 'Youth & Young Adult (Under 25)'
+  | 'Adult (25–54)'
+  | 'Senior & Elder (55+)'
+  | 'Family / Parent & Caregiver';
+
+export interface PublicClientProfileSummary {
+  session_id: string;
+  client_alias: string;
+  municipality: string;
+  avatar_icon: string;
+  age_group: string;
+  pin_recovery_hint?: string;
+  is_guest?: boolean;
+  updated_at: string;
+}
+
+export interface ClientRegistrationPayload {
+  client_alias: string;
+  pin_code: string;
+  pin_recovery_hint?: string;
+  municipality: string;
+  avatar_icon?: string;
+  age_group?: string;
+  active_barriers?: string[];
+  preferred_learning_modality?: LearningModality;
+  upgrade_from_session_id?: string;
+}
+
 export interface ClientWorkbookSession {
   session_id: string;
   client_alias: string;
   coordinator_id: string;
   municipality: string;
+  pin_code?: string;
+  pin_recovery_hint?: string;
+  avatar_icon?: string;
+  age_group?: string;
+  is_guest?: boolean;
   problem_solving_complexity: number;
   text_admin_tolerance: number;
   preferred_learning_modality: LearningModality;

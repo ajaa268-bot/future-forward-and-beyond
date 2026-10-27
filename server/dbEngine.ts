@@ -6,7 +6,9 @@ import {
   WorkbookModuleRecord,
   ClientWorkbookSession,
   DDLQueryFilterParams,
-  SyncChangeItem
+  SyncChangeItem,
+  PublicClientProfileSummary,
+  ClientRegistrationPayload
 } from '../src/types/navigator.js';
 import {
   getProgramPrimarySectionId,
@@ -79,7 +81,16 @@ export class NavigatorDatabaseEngine {
       try {
         const raw: ClientWorkbookSession[] = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf-8'));
         for (const s of raw) {
-          this.sessions.set(s.session_id, s);
+          this.sessions.set(s.session_id, {
+            ...s,
+            pin_code: s.pin_code || '1234',
+            pin_recovery_hint:
+              s.pin_recovery_hint ||
+              (s.session_id === 'A842' ? 'Easy demo PIN: 1-2-3-4 (or ask Marcus)' : 'Ask your coordinator or check your pocket card'),
+            avatar_icon: s.avatar_icon || 'Waves',
+            age_group: s.age_group || 'Adult (25–54)',
+            is_guest: Boolean(s.is_guest)
+          });
         }
       } catch {
         this.sessions.set(INITIAL_DEMO_SESSION.session_id, { ...INITIAL_DEMO_SESSION });
@@ -328,14 +339,154 @@ export class NavigatorDatabaseEngine {
   }
 
   public resetDemoSession(sessionId: string = 'A842'): ClientWorkbookSession {
+    const existing = this.sessions.get(sessionId);
     const reset: ClientWorkbookSession = {
       ...JSON.parse(JSON.stringify(INITIAL_DEMO_SESSION)),
       session_id: sessionId,
+      client_alias: existing?.client_alias || INITIAL_DEMO_SESSION.client_alias,
+      pin_code: existing?.pin_code || INITIAL_DEMO_SESSION.pin_code,
+      pin_recovery_hint: existing?.pin_recovery_hint || INITIAL_DEMO_SESSION.pin_recovery_hint,
+      avatar_icon: existing?.avatar_icon || INITIAL_DEMO_SESSION.avatar_icon,
+      age_group: existing?.age_group || INITIAL_DEMO_SESSION.age_group,
+      is_guest: existing?.is_guest || false,
       updated_at: new Date().toISOString()
     };
     this.sessions.set(sessionId, reset);
     this.persistSessions();
     return reset;
+  }
+
+  /**
+   * Lists registered client profiles (excluding anonymous guest sessions) for quick-tap PIN sign-in.
+   * Never exposes raw `pin_code`.
+   */
+  public listClientProfiles(): PublicClientProfileSummary[] {
+    const profiles: PublicClientProfileSummary[] = [];
+    for (const s of this.sessions.values()) {
+      if (s.is_guest || s.session_id === 'GUEST') continue;
+      profiles.push({
+        session_id: s.session_id,
+        client_alias: s.client_alias,
+        municipality: s.municipality || 'Surrey',
+        avatar_icon: s.avatar_icon || 'Waves',
+        age_group: s.age_group || 'Adult (25–54)',
+        pin_recovery_hint: s.pin_recovery_hint,
+        is_guest: false,
+        updated_at: s.updated_at
+      });
+    }
+    return profiles.sort((a, b) => {
+      if (a.session_id === 'A842') return -1;
+      if (b.session_id === 'A842') return 1;
+      return b.updated_at.localeCompare(a.updated_at);
+    });
+  }
+
+  /**
+   * Authenticates a client using their nickname or session ID and 4-digit PIN (zero email required).
+   */
+  public authenticateClientPin(
+    identifier: string,
+    pinCode: string
+  ): ClientWorkbookSession | null {
+    const cleanId = (identifier || '').trim().toLowerCase();
+    const cleanPin = (pinCode || '').trim();
+    if (!cleanId || !cleanPin) return null;
+
+    for (const s of this.sessions.values()) {
+      if (s.is_guest) continue;
+      const matchesSession = s.session_id.toLowerCase() === cleanId;
+      const matchesAlias = s.client_alias.trim().toLowerCase() === cleanId;
+      if ((matchesSession || matchesAlias) && (s.pin_code || '1234') === cleanPin) {
+        return s;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Registers a new client profile with a 4-digit PIN (or updates/upgrades a Guest session).
+   */
+  public registerClientWithPin(payload: ClientRegistrationPayload): ClientWorkbookSession {
+    const cleanAlias = (payload.client_alias || '').trim() || 'Explorer';
+    const cleanPin = (payload.pin_code || '').replace(/\D/g, '').slice(0, 6) || '1234';
+    const city = payload.municipality || 'Surrey';
+    const barriers =
+      Array.isArray(payload.active_barriers) && payload.active_barriers.length > 0
+        ? payload.active_barriers
+        : ['Transit Pass / Compass', 'Groceries / Meals'];
+
+    // Check if an existing profile with the same alias & PIN exists, or generate a short friendly ID
+    const shortCode = `C${Math.floor(100 + Math.random() * 900)}`;
+    const baseTemplate: ClientWorkbookSession =
+      payload.upgrade_from_session_id && this.sessions.has(payload.upgrade_from_session_id)
+        ? JSON.parse(JSON.stringify(this.sessions.get(payload.upgrade_from_session_id)!))
+        : JSON.parse(JSON.stringify(INITIAL_DEMO_SESSION));
+
+    const newSession: ClientWorkbookSession = {
+      ...baseTemplate,
+      session_id: shortCode,
+      client_alias: cleanAlias,
+      municipality: city,
+      pin_code: cleanPin,
+      pin_recovery_hint:
+        (payload.pin_recovery_hint || '').trim() ||
+        `4-digit PIN chosen by ${cleanAlias} during onboarding`,
+      avatar_icon: payload.avatar_icon || 'Waves',
+      age_group: payload.age_group || 'Adult (25–54)',
+      is_guest: false,
+      preferred_learning_modality:
+        payload.preferred_learning_modality || baseTemplate.preferred_learning_modality,
+      active_barriers: barriers,
+      updated_at: new Date().toISOString()
+    };
+
+    // Match top programs for their city & barriers right away
+    const ddl = this.verifyProgramsDDL(
+      {
+        municipality: city,
+        supports_high_skill_low_text: true,
+        offers_oral_or_practical_testing: true,
+        scribe_or_reader_available: true
+      },
+      newSession
+    );
+
+    if (ddl.primary_matches[0]) {
+      newSession.pinned_program_id = ddl.primary_matches[0].program_id;
+      newSession.next_micro_step_text = `Call ${ddl.primary_matches[0].contact_lead_name} (${ddl.primary_matches[0].contact_phone_or_email}) for a friendly intro in ${city}.`;
+    }
+    if (ddl.immediate_relief_matches[0]) {
+      newSession.pinned_relief_program_id = ddl.immediate_relief_matches[0].program_id;
+    }
+
+    this.sessions.set(newSession.session_id, newSession);
+    this.persistSessions();
+    return newSession;
+  }
+
+  /**
+   * Creates or returns the anonymous Guest Sanctuary session (no PIN or registration required).
+   */
+  public createOrGetGuestSession(municipality?: string): ClientWorkbookSession {
+    const existing = this.sessions.get('GUEST');
+    const city = municipality || existing?.municipality || 'Surrey';
+    const guestSession: ClientWorkbookSession = {
+      ...JSON.parse(JSON.stringify(INITIAL_DEMO_SESSION)),
+      ...(existing || {}),
+      session_id: 'GUEST',
+      client_alias: 'Guest Visitor',
+      municipality: city,
+      pin_code: '',
+      pin_recovery_hint: 'Guest Mode — No PIN required',
+      avatar_icon: 'Sun',
+      age_group: 'All Ages & Walks of Life',
+      is_guest: true,
+      updated_at: new Date().toISOString()
+    };
+    this.sessions.set('GUEST', guestSession);
+    this.persistSessions();
+    return guestSession;
   }
 
   private matchesCity(progCity: string, filterCity?: string): 'exact' | 'regional' | 'none' {

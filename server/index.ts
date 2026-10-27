@@ -109,6 +109,83 @@ app.get('/api/programs', (_req, res) => {
   res.json({ programs: db.getAllPrograms() });
 });
 
+// ============================================================================
+// PIN Authentication, Zero-Email Client Onboarding & Guest Mode Endpoints
+// ============================================================================
+app.get('/api/auth/profiles', (_req, res) => {
+  res.json({ profiles: db.listClientProfiles() });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { identifier, pin_code } = req.body || {};
+  if (!identifier || !pin_code) {
+    return res.status(400).json({ error: 'Please choose your name/nickname and enter your 4-digit PIN.' });
+  }
+  const matched = db.authenticateClientPin(String(identifier), String(pin_code));
+  if (!matched) {
+    return res.status(401).json({
+      error: 'That 4-digit PIN did not match. Try again, check your PIN hint, or continue as Guest.'
+    });
+  }
+  const ddl = computeDDLForSession(matched.session_id);
+  res.json({
+    session: matched,
+    ddl,
+    profiles: db.listClientProfiles()
+  });
+});
+
+app.post('/api/auth/register', (req, res) => {
+  const {
+    client_alias,
+    pin_code,
+    pin_recovery_hint,
+    municipality,
+    avatar_icon,
+    age_group,
+    active_barriers,
+    preferred_learning_modality,
+    upgrade_from_session_id
+  } = req.body || {};
+
+  if (!client_alias || !String(client_alias).trim()) {
+    return res.status(400).json({ error: 'Please enter a first name or nickname.' });
+  }
+  const cleanPin = String(pin_code || '').replace(/\D/g, '');
+  if (cleanPin.length < 4) {
+    return res.status(400).json({ error: 'Please choose an easy 4-digit PIN (numbers 0–9).' });
+  }
+
+  const created = db.registerClientWithPin({
+    client_alias: String(client_alias).trim(),
+    pin_code: cleanPin.slice(0, 4),
+    pin_recovery_hint,
+    municipality: municipality || 'Surrey',
+    avatar_icon,
+    age_group,
+    active_barriers,
+    preferred_learning_modality,
+    upgrade_from_session_id
+  });
+
+  const ddl = computeDDLForSession(created.session_id);
+  res.json({
+    session: created,
+    ddl,
+    profiles: db.listClientProfiles()
+  });
+});
+
+app.post('/api/auth/guest', (req, res) => {
+  const { municipality } = req.body || {};
+  const guestSession = db.createOrGetGuestSession(municipality);
+  const ddl = computeDDLForSession(guestSession.session_id);
+  res.json({
+    session: guestSession,
+    ddl
+  });
+});
+
 // Get Session + Live DDL Verification Matches
 app.get('/api/session/:sessionId', (req, res) => {
   const session = db.getSession(req.params.sessionId);

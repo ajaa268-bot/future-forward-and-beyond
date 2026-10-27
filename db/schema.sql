@@ -98,6 +98,14 @@ CREATE TABLE IF NOT EXISTS client_workbook_sessions (
     session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_alias VARCHAR(100) NOT NULL, -- Anonymous nickname/handle chosen by client
     coordinator_id VARCHAR(100),
+    municipality VARCHAR(100) DEFAULT 'Surrey',
+
+    -- Zero-Email PIN Authentication & Trauma-Informed Onboarding Profile
+    pin_code VARCHAR(10) DEFAULT '1234', -- 4-digit memorable PIN (no email or password required)
+    pin_recovery_hint VARCHAR(255), -- Optional memory cue or coordinator recovery note
+    avatar_icon VARCHAR(50) DEFAULT 'Waves',
+    age_group VARCHAR(50) DEFAULT 'Adult',
+    is_guest BOOLEAN DEFAULT FALSE,
     
     -- Dual-Axis Competency Profile
     problem_solving_complexity INT CHECK (problem_solving_complexity BETWEEN 1 AND 5),
