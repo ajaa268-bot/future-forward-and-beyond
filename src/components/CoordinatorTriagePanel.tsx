@@ -30,6 +30,7 @@ import {
   getProgramSectionMeta,
   parseContactBadges
 } from '../types/programGrouping.js';
+import { RealWorldConnectionBridgeModal } from './RealWorldConnectionBridgeModal.js';
 
 interface CoordinatorTriagePanelProps {
   session: ClientWorkbookSession;
@@ -126,6 +127,8 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [partnerFilter, setPartnerFilter] = useState<PartnerFilter>('ALL');
+  const [sameDayOnly, setSameDayOnly] = useState(false);
+  const [bridgeModalOpen, setBridgeModalOpen] = useState(false);
   const [showAllPrograms, setShowAllPrograms] = useState(false);
   const [showAllFoodHubs, setShowAllFoodHubs] = useState(false);
 
@@ -211,6 +214,9 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
   const filterAndRankList = (list: VerifiedProgramRecord[], activeFilter: PartnerFilter) => {
     const filtered = list.filter((prog) => {
       if (!matchesSearchText(prog)) return false;
+      if (sameDayOnly && (prog.intake_type !== 'Drop-In' || prog.waitlist_weeks_estimate > 0)) {
+        return false;
+      }
       const rank = getCategoryFilterRank(prog, activeFilter);
       if (rank === 0) return false;
       if (session.municipality && session.municipality !== 'All') {
@@ -450,7 +456,26 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                 Connect With Options+, Sources BC, Schools &amp; Local Food Banks
               </h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setBridgeModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-[#e3f7f4] hover:bg-[#cdeee9] border border-[#9ddbd1] text-[#0f5e53] text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+              >
+                <HeartHandshake className="w-3.5 h-3.5 text-[#1ca796]" />
+                <span>Desk Card, Call Script &amp; Bus Helper</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSameDayOnly(!sameDayOnly)}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
+                  sameDayOnly
+                    ? 'ocean-btn text-white'
+                    : 'bg-[#fff8e8] hover:bg-[#fcedc8] border-[#f2d28b] text-[#8a520d]'
+                }`}
+              >
+                {sameDayOnly ? '✓ Walk-In Today Only' : 'Walk-In Today Only'}
+              </button>
               <MapPin className="w-3.5 h-3.5 text-[#1ca796]" />
               <span className="text-xs font-medium text-[#4a656d]">City / Area:</span>
               <select
@@ -879,9 +904,21 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   </p>
 
                   <div className="mt-2.5 pt-2.5 border-t border-[#e5dfd2] flex flex-wrap items-center justify-between gap-2 text-xs text-[#4a656d]">
-                    <span className="flex items-center gap-1.5 font-medium text-[#2c525c]">
-                      <Bus className="w-3.5 h-3.5 text-[#2c6e9b]" /> Transit: {prog.nearest_transit_stop}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="flex items-center gap-1.5 font-medium text-[#2c525c]">
+                        <Bus className="w-3.5 h-3.5 text-[#2c6e9b]" /> Transit: {prog.nearest_transit_stop}
+                      </span>
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&travelmode=transit&destination=${encodeURIComponent(
+                          `${prog.street_address}, ${prog.municipality}, BC`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2 py-0.5 rounded-lg bg-[#e6f2fb] hover:bg-[#d2e7f7] border border-[#abd2ee] text-[#154c70] text-[11px] font-bold"
+                      >
+                        1-Tap Bus Route →
+                      </a>
+                    </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-semibold text-[#1b5270]">
                         {prog.contact_lead_name}:
@@ -1026,6 +1063,22 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
           })}
         </div>
       </div>
+
+      <RealWorldConnectionBridgeModal
+        isOpen={bridgeModalOpen}
+        onClose={() => setBridgeModalOpen(false)}
+        session={session}
+        primaryProgram={
+          allCombinedUnique.find((p) => p.program_id === session.pinned_program_id) ||
+          ddl.primary_matches[0] ||
+          null
+        }
+        reliefProgram={
+          allCombinedUnique.find((p) => p.program_id === session.pinned_relief_program_id) ||
+          ddl.immediate_relief_matches[0] ||
+          null
+        }
+      />
     </div>
   );
 };

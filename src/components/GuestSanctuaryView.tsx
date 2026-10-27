@@ -9,7 +9,10 @@ import {
   Compass,
   MapPin,
   HeartHandshake,
-  ArrowRight
+  ArrowRight,
+  Zap,
+  Navigation,
+  MessageSquareHeart
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
@@ -26,6 +29,10 @@ import {
   getProgramSectionMeta,
   parseContactBadges
 } from '../types/programGrouping.js';
+import {
+  RealWorldConnectionBridgeModal,
+  buildTransitRouteUrl
+} from './RealWorldConnectionBridgeModal.js';
 
 interface GuestSanctuaryViewProps {
   session: ClientWorkbookSession;
@@ -47,6 +54,8 @@ export const GuestSanctuaryView: React.FC<GuestSanctuaryViewProps> = ({
   const [selectedCity, setSelectedCity] = useState<string>(session.municipality || 'All');
   const [selectedCategory, setSelectedCategory] = useState<SanctuaryCategoryFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sameDayOnly, setSameDayOnly] = useState<boolean>(false);
+  const [connectionModalOpen, setConnectionModalOpen] = useState<boolean>(false);
 
   const pinnedMain = allPrograms.find((p) => p.program_id === session.pinned_program_id) || null;
   const pinnedRelief =
@@ -57,6 +66,13 @@ export const GuestSanctuaryView: React.FC<GuestSanctuaryViewProps> = ({
       const cityRank = getCityMatchTier(p, selectedCity);
       const matchesCity = selectedCity === 'All' || cityRank !== 'none';
       const matchesCat = getCategoryFilterRank(p, selectedCategory) > 0;
+      const matchesSameDay =
+        !sameDayOnly ||
+        p.waitlist_weeks_estimate === 0 ||
+        p.category === 'Survival_Relief' ||
+        /walk-in|drop-in|24\/7|same-day|today|immediate/i.test(
+          `${p.highlight_note} ${p.nearest_transit_stop} ${p.program_name}`
+        );
       const q = searchQuery.trim().toLowerCase();
       const matchesSearch =
         !q ||
@@ -66,7 +82,7 @@ export const GuestSanctuaryView: React.FC<GuestSanctuaryViewProps> = ({
         p.highlight_note.toLowerCase().includes(q) ||
         p.contact_phone_or_email.toLowerCase().includes(q) ||
         (p.hobby_tags && p.hobby_tags.some((t) => t.toLowerCase().includes(q)));
-      return matchesCity && matchesCat && matchesSearch;
+      return matchesCity && matchesCat && matchesSameDay && matchesSearch;
     })
     .sort((a, b) => {
       if (selectedCategory !== 'ALL') {
@@ -106,6 +122,14 @@ export const GuestSanctuaryView: React.FC<GuestSanctuaryViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setConnectionModalOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-[#12323b] hover:bg-[#1b4a56] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+            >
+              <MessageSquareHeart className="w-4 h-4 text-[#6ee7d8]" />
+              <span>Desk Card, Call Script &amp; Bus Helper</span>
+            </button>
             <button
               type="button"
               onClick={onOpenInteractiveWorkbookAsGuest}
@@ -257,12 +281,26 @@ export const GuestSanctuaryView: React.FC<GuestSanctuaryViewProps> = ({
               <option value="Vancouver">Vancouver</option>
               <option value="Richmond">Richmond</option>
             </select>
-            {(selectedCity !== 'All' || selectedCategory !== 'ALL' || searchQuery.trim() !== '') && (
+            <button
+              type="button"
+              onClick={() => setSameDayOnly((prev) => !prev)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition-all ${
+                sameDayOnly
+                  ? 'bg-[#e76f51] text-white shadow-xs'
+                  : 'bg-[#fdf3eb] text-[#9b3f25] border border-[#f2c6b6] hover:bg-[#fae5d7]'
+              }`}
+              title="Filter to programs with 0-week waitlist, same-day walk-in, or 24/7 immediate access"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              {sameDayOnly ? '✓ Walk-In Today Only' : 'Walk-In Today Only'}
+            </button>
+            {(selectedCity !== 'All' || selectedCategory !== 'ALL' || sameDayOnly || searchQuery.trim() !== '') && (
               <button
                 type="button"
                 onClick={() => {
                   setSelectedCity('All');
                   setSelectedCategory('ALL');
+                  setSameDayOnly(false);
                   setSearchQuery('');
                 }}
                 className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#e6f6f3] border border-[#bce5dd] text-xs font-semibold text-[#1b7a6e] cursor-pointer"
@@ -385,6 +423,15 @@ export const GuestSanctuaryView: React.FC<GuestSanctuaryViewProps> = ({
                           <div className="text-[11px] text-[#4b6a73] mt-0.5">
                             {p.nearest_transit_stop}
                           </div>
+                          <a
+                            href={buildTransitRouteUrl(p, session.municipality)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-lg bg-[#e6f7f4] hover:bg-[#cdeee8] text-[#0f5e53] border border-[#9ddbd1] text-[10px] font-bold"
+                          >
+                            <Navigation className="w-2.5 h-2.5 text-[#1ca796]" />
+                            1-Tap Bus Route
+                          </a>
                         </td>
                         <td className="py-3.5 px-3.5">
                           <div className="font-semibold text-[#14343d] mb-1">
@@ -463,6 +510,19 @@ export const GuestSanctuaryView: React.FC<GuestSanctuaryViewProps> = ({
           </table>
         </div>
       </div>
+
+      <RealWorldConnectionBridgeModal
+        isOpen={connectionModalOpen}
+        onClose={() => setConnectionModalOpen(false)}
+        session={session}
+        primaryProgram={pinnedMain || filteredPrograms[0] || allPrograms[0] || null}
+        reliefProgram={
+          pinnedRelief ||
+          filteredPrograms.find((p) => p.category === 'Survival_Relief') ||
+          allPrograms.find((p) => p.category === 'Survival_Relief') ||
+          null
+        }
+      />
     </div>
   );
 };

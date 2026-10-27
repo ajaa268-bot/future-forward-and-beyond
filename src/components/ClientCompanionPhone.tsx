@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Bus,
   Phone,
   Sparkles,
   Volume2,
-  Wifi
+  Wifi,
+  HandHeart,
+  MessageSquare,
+  Printer,
+  ShieldCheck
 } from 'lucide-react';
 import {
   ClientWorkbookSession,
@@ -15,6 +19,7 @@ import {
   getProgramSectionMeta,
   parseContactBadges
 } from '../types/programGrouping.js';
+import { RealWorldConnectionBridgeModal } from './RealWorldConnectionBridgeModal.js';
 
 interface ClientCompanionPhoneProps {
   session: ClientWorkbookSession;
@@ -37,6 +42,11 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
   ddl,
   onPatchSession
 }) => {
+  const [bridgeModalOpen, setBridgeModalOpen] = useState<boolean>(false);
+  const [bridgeInitialMode, setBridgeInitialMode] = useState<
+    'desk_card' | 'call_script' | 'transit_checklist' | 'buddy_share'
+  >('desk_card');
+
   const allAvailable = [...ddl.primary_matches, ...ddl.immediate_relief_matches];
   const pinnedProgram =
     allAvailable.find((p) => p.program_id === session.pinned_program_id) ||
@@ -67,6 +77,77 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
       </div>
 
       <div className="space-y-4 mt-3.5 max-h-[760px] overflow-y-auto pr-1">
+        {/* 0. Real-World Connection Bridge Bar (Walk-In Desk Card, Call/SMS Script, Bus Route, Pocket Share) */}
+        <div className="bg-gradient-to-r from-[#fff8e8] via-[#f5fbf9] to-[#e6f6f3] border-2 border-[#9ddbd1] rounded-2xl p-3 space-y-2 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#116358] flex items-center gap-1">
+              <HandHeart className="w-3.5 h-3.5 text-[#1ca796]" /> Connect Without Stress
+            </span>
+            <span className="text-[10px] font-semibold text-[#4b6a73]">Tap Any Tool</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setBridgeInitialMode('desk_card');
+                setBridgeModalOpen(true);
+              }}
+              className="p-2 rounded-xl bg-white hover:bg-[#e3f7f4] border border-[#bce5dd] text-left flex items-center gap-1.5 cursor-pointer transition-all"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#1ca796] shrink-0" />
+              <div>
+                <div className="text-[11px] font-bold text-[#12323b]">Show at Desk</div>
+                <div className="text-[9px] text-[#4b6a73]">Silent Walk-In Card</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setBridgeInitialMode('call_script');
+                setBridgeModalOpen(true);
+              }}
+              className="p-2 rounded-xl bg-white hover:bg-[#e3f7f4] border border-[#bce5dd] text-left flex items-center gap-1.5 cursor-pointer transition-all"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#23638a] shrink-0" />
+              <div>
+                <div className="text-[11px] font-bold text-[#12323b]">What to Say</div>
+                <div className="text-[9px] text-[#4b6a73]">Call &amp; Text Script</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setBridgeInitialMode('transit_checklist');
+                setBridgeModalOpen(true);
+              }}
+              className="p-2 rounded-xl bg-white hover:bg-[#e3f7f4] border border-[#bce5dd] text-left flex items-center gap-1.5 cursor-pointer transition-all"
+            >
+              <Bus className="w-3.5 h-3.5 text-[#1b7a6e] shrink-0" />
+              <div>
+                <div className="text-[11px] font-bold text-[#12323b]">Bus &amp; Rules</div>
+                <div className="text-[9px] text-[#4b6a73]">Route &amp; No-ID Check</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setBridgeInitialMode('buddy_share');
+                setBridgeModalOpen(true);
+              }}
+              className="p-2 rounded-xl bg-white hover:bg-[#e3f7f4] border border-[#bce5dd] text-left flex items-center gap-1.5 cursor-pointer transition-all"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#8a520d] shrink-0" />
+              <div>
+                <div className="text-[11px] font-bold text-[#12323b]">Pocket Pass</div>
+                <div className="text-[9px] text-[#4b6a73]">Share / Print Offline</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* 1. Custom Skill Blueprint Banner */}
         <div className="bg-gradient-to-br from-[#e6f6f3] via-[#f2faf8] to-[#e8f3f9] border border-[#bce5dd] rounded-2xl p-4 space-y-2.5">
           <div className="flex items-center justify-between">
@@ -332,6 +413,15 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
           </div>
         </div>
       </div>
+
+      <RealWorldConnectionBridgeModal
+        isOpen={bridgeModalOpen}
+        onClose={() => setBridgeModalOpen(false)}
+        session={session}
+        primaryProgram={pinnedProgram || null}
+        reliefProgram={reliefProgram || null}
+        initialMode={bridgeInitialMode}
+      />
     </div>
   );
 };
