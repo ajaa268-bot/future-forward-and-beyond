@@ -21,6 +21,15 @@ import {
   ClientWorkbookSession,
   VerifiedProgramRecord
 } from '../types/navigator.js';
+import {
+  SanctuaryCategoryFilter,
+  CATEGORY_FILTER_PILLS,
+  GROUPED_24_7_HELPLINES,
+  getCategoryFilterRank,
+  getCityMatchTier,
+  getProgramSectionMeta,
+  parseContactBadges
+} from '../types/programGrouping.js';
 
 interface CoordinatorTriagePanelProps {
   session: ClientWorkbookSession;
@@ -32,24 +41,7 @@ interface CoordinatorTriagePanelProps {
   onPatchSession: (patch: Partial<ClientWorkbookSession>) => void;
 }
 
-type PartnerFilter =
-  | 'ALL'
-  | 'COUNSELORS_THERAPY'
-  | 'PREGNANCY_BABY'
-  | 'HOSPITALS_LABS'
-  | 'ALL_AGES_SENIORS_YOUTH'
-  | 'OPTIONS_PLUS'
-  | 'SOURCES_BC'
-  | 'LOCAL_SOCIETIES'
-  | 'HOUSING_HOMELESS'
-  | 'SUBSIDIES_LEISURE'
-  | 'PHYSICAL_BARRIERS'
-  | 'MENTAL_HEALTH_CRISIS'
-  | 'RECOVERY_12STEP'
-  | 'LAW_FIRST_RESPONDERS'
-  | 'SCHOOLS'
-  | 'FOOD_PROGRAMS'
-  | 'HANDS_ON_WORK';
+type PartnerFilter = SanctuaryCategoryFilter;
 
 const AREA_OPTIONS = [
   { value: 'All', label: 'All Lower Mainland Areas (Every City)' },
@@ -184,7 +176,8 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
 
   const strengthStyle = getStrengthStyle();
 
-  const matchesPartnerAndSearch = (prog: VerifiedProgramRecord) => {
+  const matchesSearchText = (prog: VerifiedProgramRecord) => {
+    if (!searchQuery.trim()) return true;
     const haystack = [
       prog.program_name,
       prog.organization_name,
@@ -192,259 +185,65 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
       prog.street_address,
       prog.highlight_note,
       prog.noc_code,
+      prog.contact_lead_name,
+      prog.contact_phone_or_email,
       ...(prog.hobby_tags || [])
     ]
       .join(' ')
       .toLowerCase();
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
-
-    if (partnerFilter === 'COUNSELORS_THERAPY') {
-      return (
-        haystack.includes('counselor') ||
-        haystack.includes('counselors') ||
-        haystack.includes('counseling') ||
-        haystack.includes('counselling') ||
-        haystack.includes('therapy') ||
-        haystack.includes('therapist') ||
-        haystack.includes('moving forward') ||
-        haystack.includes('kuu-us') ||
-        haystack.includes('frafca') ||
-        haystack.includes('sacs') ||
-        haystack.includes('cmha') ||
-        haystack.includes('foundry')
-      );
-    }
-    if (partnerFilter === 'PREGNANCY_BABY') {
-      return (
-        haystack.includes('pregnancy') ||
-        haystack.includes('pregnant') ||
-        haystack.includes('prenatal') ||
-        haystack.includes('maternity') ||
-        haystack.includes('baby') ||
-        haystack.includes('newborn') ||
-        haystack.includes('infant') ||
-        haystack.includes('perinatal') ||
-        haystack.includes('maxxine wright') ||
-        haystack.includes('healthiest babies') ||
-        haystack.includes('tiny bundles') ||
-        haystack.includes('fir square') ||
-        haystack.includes('diapers') ||
-        haystack.includes('formula') ||
-        haystack.includes('sexual health')
-      );
-    }
-    if (partnerFilter === 'HOSPITALS_LABS') {
-      return (
-        haystack.includes('hospital') ||
-        haystack.includes('hospitals') ||
-        haystack.includes('upcc') ||
-        haystack.includes('urgent') ||
-        haystack.includes('lifelabs') ||
-        haystack.includes('bloodwork') ||
-        haystack.includes('ultrasound') ||
-        haystack.includes('x-ray') ||
-        haystack.includes('quibble creek') ||
-        haystack.includes('street nurse') ||
-        haystack.includes('outpatient') ||
-        haystack.includes('jim pattison') ||
-        haystack.includes('surrey memorial') ||
-        haystack.includes('peace arch') ||
-        haystack.includes('royal columbian') ||
-        haystack.includes('vgh') ||
-        haystack.includes('st. paul')
-      );
-    }
-    if (partnerFilter === 'ALL_AGES_SENIORS_YOUTH') {
-      return (
-        haystack.includes('senior') ||
-        haystack.includes('seniors') ||
-        haystack.includes('elder') ||
-        haystack.includes('55+') ||
-        haystack.includes('65+') ||
-        haystack.includes('safer') ||
-        haystack.includes('better at home') ||
-        haystack.includes('brella') ||
-        haystack.includes('children') ||
-        haystack.includes('child care') ||
-        haystack.includes('childcare') ||
-        haystack.includes('family') ||
-        haystack.includes('families') ||
-        haystack.includes('jordan') ||
-        haystack.includes('youth') ||
-        haystack.includes('12–24') ||
-        haystack.includes('12-24') ||
-        haystack.includes('foundry') ||
-        haystack.includes('kids help phone') ||
-        haystack.includes('covenant house')
-      );
-    }
-    if (partnerFilter === 'OPTIONS_PLUS') {
-      return haystack.includes('options');
-    }
-    if (partnerFilter === 'SOURCES_BC') {
-      return haystack.includes('sources');
-    }
-    if (partnerFilter === 'LOCAL_SOCIETIES') {
-      return (
-        haystack.includes('society') ||
-        haystack.includes('diversecity') ||
-        haystack.includes('pics') ||
-        haystack.includes('lcss') ||
-        haystack.includes('purpose') ||
-        haystack.includes('ugm') ||
-        haystack.includes('first united') ||
-        haystack.includes('lookout') ||
-        haystack.includes('phoenix') ||
-        haystack.includes('uniti') ||
-        haystack.includes('semiahmoo') ||
-        haystack.includes('posabilities') ||
-        haystack.includes('efry') ||
-        haystack.includes('atira') ||
-        haystack.includes('options') ||
-        haystack.includes('sources')
-      );
-    }
-    if (partnerFilter === 'HOUSING_HOMELESS') {
-      return (
-        haystack.includes('homeless') ||
-        haystack.includes('shelter') ||
-        haystack.includes('housing') ||
-        haystack.includes('rent') ||
-        haystack.includes('lookout') ||
-        haystack.includes('raincity') ||
-        haystack.includes('phoenix') ||
-        haystack.includes('covenant') ||
-        haystack.includes('efry') ||
-        haystack.includes('atira')
-      );
-    }
-    if (partnerFilter === 'SUBSIDIES_LEISURE') {
-      return (
-        haystack.includes('subsidy') ||
-        haystack.includes('subsidies') ||
-        haystack.includes('pwd') ||
-        haystack.includes('disability') ||
-        haystack.includes('rent bank') ||
-        haystack.includes('rap') ||
-        haystack.includes('safer') ||
-        haystack.includes('leisure') ||
-        haystack.includes('pool') ||
-        haystack.includes('bus pass') ||
-        haystack.includes('wage subsidy') ||
-        prog.provides_living_stipend
-      );
-    }
-    if (partnerFilter === 'PHYSICAL_BARRIERS') {
-      return (
-        haystack.includes('physical') ||
-        haystack.includes('mobility') ||
-        haystack.includes('wheelchair') ||
-        haystack.includes('neil squire') ||
-        haystack.includes('spinal') ||
-        haystack.includes('disability alliance') ||
-        haystack.includes('dabc') ||
-        haystack.includes('handydart') ||
-        haystack.includes('ergonomic') ||
-        haystack.includes('uniti') ||
-        haystack.includes('posabilities') ||
-        haystack.includes('leisure')
-      );
-    }
-    if (partnerFilter === 'MENTAL_HEALTH_CRISIS') {
-      return (
-        haystack.includes('mental health') ||
-        haystack.includes('crisis') ||
-        haystack.includes('cmha') ||
-        haystack.includes('clubhouse') ||
-        haystack.includes('stepping stone') ||
-        haystack.includes('foundry') ||
-        haystack.includes('pact') ||
-        haystack.includes('cares') ||
-        haystack.includes('9-8-8') ||
-        haystack.includes('counseling') ||
-        haystack.includes('peer support')
-      );
-    }
-    if (partnerFilter === 'RECOVERY_12STEP') {
-      return (
-        haystack.includes('anonymous') ||
-        haystack.includes('12 step') ||
-        haystack.includes('recovery') ||
-        haystack.includes('alcoholics') ||
-        haystack.includes('narcotics') ||
-        haystack.includes('cocaine') ||
-        haystack.includes('coda') ||
-        haystack.includes('phoenix') ||
-        haystack.includes('ugm')
-      );
-    }
-    if (partnerFilter === 'LAW_FIRST_RESPONDERS') {
-      return (
-        haystack.includes('legal') ||
-        haystack.includes('law') ||
-        haystack.includes('lawyer') ||
-        haystack.includes('eviction') ||
-        haystack.includes('tenant') ||
-        haystack.includes('police') ||
-        haystack.includes('fire') ||
-        haystack.includes('ambulance') ||
-        haystack.includes('paramedic') ||
-        haystack.includes('car 67') ||
-        haystack.includes('car 87') ||
-        haystack.includes('9-1-1') ||
-        haystack.includes('8-1-1') ||
-        haystack.includes('victim')
-      );
-    }
-    if (partnerFilter === 'SCHOOLS') {
-      return (
-        haystack.includes('kpu') ||
-        haystack.includes('kwantlen') ||
-        haystack.includes('bcit') ||
-        haystack.includes('vcc') ||
-        haystack.includes('douglas') ||
-        haystack.includes('surrey schools') ||
-        haystack.includes('sd36') ||
-        haystack.includes('school') ||
-        haystack.includes('college')
-      );
-    }
-    if (partnerFilter === 'FOOD_PROGRAMS') {
-      return (
-        prog.category === 'Survival_Relief' ||
-        prog.category === 'Culinary_Hospitality' ||
-        haystack.includes('food') ||
-        haystack.includes('meal') ||
-        haystack.includes('kitchen') ||
-        haystack.includes('grocery') ||
-        haystack.includes('groceries')
-      );
-    }
-    if (partnerFilter === 'HANDS_ON_WORK') {
-      return prog.category !== 'Survival_Relief' && prog.supports_high_skill_low_text;
-    }
-    return true;
+    return haystack.includes(searchQuery.trim().toLowerCase());
   };
 
-  // Deduplicate combined list when filtering by specific partner/category so users can see everything matching
+  const sortByCategoryAndCity = (list: VerifiedProgramRecord[], activeFilter: PartnerFilter) => {
+    return [...list].sort((a, b) => {
+      const rankA = getCategoryFilterRank(a, activeFilter) || 99;
+      const rankB = getCategoryFilterRank(b, activeFilter) || 99;
+      if (rankA !== rankB) return rankA - rankB;
+
+      const cityA = getCityMatchTier(a, session.municipality);
+      const cityB = getCityMatchTier(b, session.municipality);
+      const cityScoreA = cityA === 'exact' ? 1 : cityA === 'regional' ? 2 : 3;
+      const cityScoreB = cityB === 'exact' ? 1 : cityB === 'regional' ? 2 : 3;
+      return cityScoreA - cityScoreB;
+    });
+  };
+
+  const filterAndRankList = (list: VerifiedProgramRecord[], activeFilter: PartnerFilter) => {
+    const filtered = list.filter((prog) => {
+      if (!matchesSearchText(prog)) return false;
+      const rank = getCategoryFilterRank(prog, activeFilter);
+      if (rank === 0) return false;
+      if (session.municipality && session.municipality !== 'All') {
+        const cityFit = getCityMatchTier(prog, session.municipality);
+        if (cityFit === 'none') return false;
+      }
+      return true;
+    });
+    return sortByCategoryAndCity(filtered, activeFilter);
+  };
+
+  // Deduplicate combined list when filtering by a specific category or search query
   const allCombinedUnique = Array.from(
     new Map(
-      [...ddl.primary_matches, ...ddl.immediate_relief_matches].map((p) => [p.program_id, p])
+      [...ddl.immediate_relief_matches, ...ddl.primary_matches].map((p) => [p.program_id, p])
     ).values()
   );
 
-  const filteredRelief = ddl.immediate_relief_matches.filter(matchesPartnerAndSearch);
-  const filteredPrimary =
-    partnerFilter === 'ALL' && !searchQuery.trim()
-      ? ddl.primary_matches
-      : allCombinedUnique.filter(matchesPartnerAndSearch);
+  const isFilteredView = partnerFilter !== 'ALL' || Boolean(searchQuery.trim());
 
-  const visibleFoodHubs = showAllFoodHubs ? filteredRelief : filteredRelief.slice(0, 3);
-  const visiblePrimaryPrograms = showAllPrograms ? filteredPrimary : filteredPrimary.slice(0, 4);
+  const filteredRelief = isFilteredView
+    ? []
+    : filterAndRankList(ddl.immediate_relief_matches, 'ALL');
+
+  const filteredPrimary = isFilteredView
+    ? filterAndRankList(allCombinedUnique, partnerFilter)
+    : filterAndRankList(ddl.primary_matches, 'ALL');
+
+  const activePillLabel =
+    CATEGORY_FILTER_PILLS.find((p) => p.id === partnerFilter)?.label || 'Matching Sanctuary Programs';
+
+  const visibleFoodHubs = showAllFoodHubs ? filteredRelief : filteredRelief.slice(0, 4);
+  const visiblePrimaryPrograms = showAllPrograms ? filteredPrimary : filteredPrimary.slice(0, 6);
 
   return (
     <div className="space-y-5">
@@ -669,10 +468,10 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
           </div>
 
           {/* 24/7 Emergency, Crisis, Shelter, Counselors, Pregnancy, Hospitals/Labs & AA/NA/CA/CoDA Quick Access */}
-          <div className="bg-gradient-to-r from-[#e5f5f2] via-[#eaf4fa] to-[#f4f0e6] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-2">
+          <div className="bg-gradient-to-r from-[#e5f5f2] via-[#eaf4fa] to-[#f4f0e6] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#145e54] flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-[#1ca796]" /> 24/7 Sanctuary Lines — Crisis, Counselors, Pregnancy, Hospitals, Labs &amp; All Ages
+                <Phone className="w-3.5 h-3.5 text-[#1ca796]" /> 24/7 Grouped Sanctuary Helplines — Tap Any Number to Call
               </span>
               <button
                 type="button"
@@ -686,31 +485,28 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                 <Volume2 className="w-3.5 h-3.5" /> Read Numbers Out Loud
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px]">
-              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#cde8e2]">
-                <div className="font-bold text-[#14343d]">Emergency, Nurse &amp; Shelter</div>
-                <div className="text-[#2c525c] mt-0.5">
-                  <strong>9-1-1</strong> (ER) • <strong>8-1-1</strong> (24/7 Nurse) • <strong>2-1-1</strong> (Shelter/Seniors) • <strong>9-8-8</strong> (Crisis)
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+              {GROUPED_24_7_HELPLINES.map((group) => (
+                <div
+                  key={group.id}
+                  className={`rounded-xl px-3 py-2.5 border space-y-1.5 ${group.badgeColor}`}
+                >
+                  <div className="font-bold text-[#14343d] text-[11px]">{group.title}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {group.lines.map((item) => (
+                      <a
+                        key={`${group.id}-${item.name}-${item.number}`}
+                        href={`tel:${item.tel}`}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white hover:bg-[#dff3ee] border border-[#bce5dd] text-[#145e54] font-semibold transition-colors"
+                        title={item.note ? `${item.name}: ${item.number} (${item.note})` : `${item.name}: ${item.number}`}
+                      >
+                        <span className="text-[#35565f] font-medium">{item.name}:</span>
+                        <span className="font-bold text-[#0f5248]">{item.number}</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#c5e0f0]">
-                <div className="font-bold text-[#164966]">Free Counselors &amp; All Ages</div>
-                <div className="text-[#2c525c] mt-0.5">
-                  Counselor: <strong>778-321-3054</strong> • Youth: <strong>1-800-668-6868</strong> • Seniors: <strong>1-877-952-3181</strong>
-                </div>
-              </div>
-              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#cce8df]">
-                <div className="font-bold text-[#145e54]">Pregnancy, Hospitals &amp; Labs</div>
-                <div className="text-[#2c525c] mt-0.5">
-                  Pregnancy/Moms: <strong>604-587-3800</strong> • SMH ER: <strong>604-581-2211</strong> • Labs: <strong>604-587-3750</strong>
-                </div>
-              </div>
-              <div className="bg-white/90 rounded-xl px-3 py-2 border border-[#dfd4c0]">
-                <div className="font-bold text-[#1b5e55]">AA, NA, CA, CoDA &amp; Legal Aid</div>
-                <div className="text-[#2c525c] mt-0.5">
-                  AA: <strong>604-434-3933</strong> • NA: <strong>604-873-1018</strong> • CA: <strong>604-662-8500</strong> • Legal: <strong>604-408-2172</strong>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -723,7 +519,7 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search counselors, pregnancy, baby diapers/formula, hospitals, walk-in doctors, LifeLabs, seniors 55+, youth, shelters, Options+, Sources BC..."
+                  placeholder="Search by program name, city, phone number, hospital, counselor, shelter, Options+, Sources BC..."
                   className="w-full bg-white border border-[#dcd4c4] rounded-xl pl-9 pr-8 py-2 text-xs text-[#163038] placeholder:text-[#6c858d] focus:outline-none focus:border-[#2a9d8f]"
                 />
                 {searchQuery && (
@@ -737,40 +533,29 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   </button>
                 )}
               </div>
+              {partnerFilter !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setPartnerFilter('ALL')}
+                  className="px-3 py-2 rounded-xl bg-white hover:bg-[#e6f6f3] border border-[#dcd4c4] text-xs font-semibold text-[#1b7a6e] cursor-pointer transition-all"
+                >
+                  Reset Category Filter
+                </button>
+              )}
               {session.municipality !== 'All' && (
                 <button
                   type="button"
                   onClick={() => onPatchSession({ municipality: 'All' })}
                   className="px-3 py-2 rounded-xl bg-white hover:bg-[#e6f6f3] border border-[#dcd4c4] text-xs font-semibold text-[#1b7a6e] cursor-pointer transition-all"
                 >
-                  Search All Cities
+                  Show All Lower Mainland Cities
                 </button>
               )}
             </div>
 
             {/* Partner & Category Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
-              {(
-                [
-                  { id: 'ALL', label: 'All Sanctuary Options (64+)' },
-                  { id: 'COUNSELORS_THERAPY', label: 'Free Counselors & Therapy' },
-                  { id: 'PREGNANCY_BABY', label: 'Pregnancy, Maternity & Baby Care' },
-                  { id: 'HOSPITALS_LABS', label: 'Hospitals, Walk-In Doctors & Labs' },
-                  { id: 'ALL_AGES_SENIORS_YOUTH', label: 'All Ages: Youth, Families & Seniors (55+)' },
-                  { id: 'HOUSING_HOMELESS', label: 'Homelessness & Safe Shelter' },
-                  { id: 'SUBSIDIES_LEISURE', label: 'Subsidies, PWD & Free Leisure Pass' },
-                  { id: 'PHYSICAL_BARRIERS', label: 'Physical Barriers & Mobility' },
-                  { id: 'MENTAL_HEALTH_CRISIS', label: 'Mental Health & 24/7 Crisis' },
-                  { id: 'RECOVERY_12STEP', label: 'AA / NA / CA / CoDA Recovery' },
-                  { id: 'LOCAL_SOCIETIES', label: 'All Local Societies' },
-                  { id: 'LAW_FIRST_RESPONDERS', label: 'Law, Police, Fire & Ambulance' },
-                  { id: 'OPTIONS_PLUS', label: 'Options+' },
-                  { id: 'SOURCES_BC', label: 'Sources BC' },
-                  { id: 'SCHOOLS', label: 'Schools & Colleges' },
-                  { id: 'FOOD_PROGRAMS', label: 'Local Food Banks & Meals' },
-                  { id: 'HANDS_ON_WORK', label: 'Hands-On Paid Training' }
-                ] as Array<{ id: PartnerFilter; label: string }>
-              ).map((pill) => {
+              {CATEGORY_FILTER_PILLS.map((pill) => {
                 const active = partnerFilter === pill.id;
                 return (
                   <button
@@ -822,19 +607,19 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   ))
                 ) : (
                   <span className="text-xs text-[#4a656d]">
-                    Tap any extra support you need in Step 5 (bus tickets, meals, boots, or help with forms).
+                    Tap any extra support you need in Step 5 (bus tickets, meals, boots, shelter, counseling, or form help).
                   </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Local Food Banks, Hot Meals & Same-Day Support Section */}
+          {/* Same-Day Care, Shelters, Food Banks & Immediate Relief Section */}
           {filteredRelief.length > 0 && (
             <div className="bg-[#eaf4fa] border border-[#b9d9ec] rounded-2xl p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase text-[#1e5678] flex items-center gap-1.5">
-                  <Utensils className="w-4 h-4 text-[#1ca796]" /> Local Food Banks, Hot Meals &amp; Same-Day Support ({filteredRelief.length} Available)
+                  <Utensils className="w-4 h-4 text-[#1ca796]" /> Same-Day Support: Food Banks, Shelters, Urgent Care &amp; Drop-In Help ({filteredRelief.length} Matched)
                 </span>
                 {filteredRelief.length > 3 && (
                   <button
@@ -844,11 +629,11 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   >
                     {showAllFoodHubs ? (
                       <>
-                        Show Top 3 Food Banks <ChevronUp className="w-3.5 h-3.5" />
+                        Show Top 3 Same-Day Supports <ChevronUp className="w-3.5 h-3.5" />
                       </>
                     ) : (
                       <>
-                        Show All {filteredRelief.length} Local Food Banks &amp; Hubs <ChevronDown className="w-3.5 h-3.5" />
+                        Show All {filteredRelief.length} Same-Day Supports <ChevronDown className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
@@ -860,20 +645,32 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   const isPinnedRelief =
                     (session.pinned_relief_program_id || ddl.immediate_relief_matches[0]?.program_id) ===
                     relief.program_id;
+                  const sectionMeta = getProgramSectionMeta(relief);
+                  const contactBadges = parseContactBadges(relief.contact_phone_or_email);
+                  const cityTier = getCityMatchTier(relief, session.municipality);
                   return (
                     <div
                       key={relief.program_id}
                       className={`rounded-xl p-3.5 border transition-all ${
                         isPinnedRelief
                           ? 'bg-white border-[#2a9d8f] shadow-xs'
-                          : 'bg-white/85 border-[#c5e0f0]'
+                          : 'bg-white/90 border-[#c5e0f0]'
                       }`}
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${sectionMeta.badgeClasses}`}
+                            >
+                              {sectionMeta.shortBadge}
+                            </span>
                             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#e5f6f3] text-[#1b7a6e] border border-[#bce5dd]">
                               {relief.municipality}
+                              {session.municipality !== 'All' &&
+                                cityTier === 'regional' &&
+                                relief.municipality !== session.municipality &&
+                                ` (Serves ${session.municipality})`}
                             </span>
                             <span className="text-[11px] font-medium text-[#23638a]">
                               {relief.organization_name}
@@ -910,7 +707,7 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                             }`}
                           >
                             <Pin className="w-3.5 h-3.5" />
-                            {isPinnedRelief ? 'Saved Food Hub' : 'Save Food Hub to Phone'}
+                            {isPinnedRelief ? `✓ ${sectionMeta.savedLabel}` : sectionMeta.saveLabel}
                           </button>
                         </div>
                       </div>
@@ -921,9 +718,31 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                         <span className="text-[#2c525c] font-medium flex items-center gap-1">
                           <Bus className="w-3.5 h-3.5 text-[#2c6e9b]" /> {relief.nearest_transit_stop}
                         </span>
-                        <span className="text-[#1b5270] font-semibold flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5 text-[#1ca796]" /> {relief.contact_lead_name} • {relief.contact_phone_or_email}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[#1b5270] font-semibold">
+                            {relief.contact_lead_name}:
+                          </span>
+                          {contactBadges.map((b, bIdx) =>
+                            b.href ? (
+                              <a
+                                key={`${relief.program_id}-contact-${bIdx}`}
+                                href={b.href}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#f2faf8] hover:bg-[#dff3ee] border border-[#bce5dd] text-[#0f5248] font-semibold transition-colors"
+                              >
+                                <Phone className="w-3 h-3 text-[#1ca796]" />
+                                {b.label !== 'Call' && b.label !== 'Email' ? `${b.label}: ` : ''}
+                                {b.value}
+                              </a>
+                            ) : (
+                              <span
+                                key={`${relief.program_id}-contact-${bIdx}`}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-[#dce7ec] text-[#2c525c] font-medium"
+                              >
+                                {b.value}
+                              </span>
+                            )
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -936,7 +755,10 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="text-xs font-semibold uppercase tracking-wider text-[#4a656d] flex items-center gap-1.5">
-                <GraduationCap className="w-4 h-4 text-[#1ca796]" /> Recommended Programs, Schools &amp; Community Partners ({filteredPrimary.length} Found):
+                <GraduationCap className="w-4 h-4 text-[#1ca796]" />{' '}
+                {partnerFilter === 'ALL'
+                  ? `Recommended Programs, Schools & Community Partners (${filteredPrimary.length} Found):`
+                  : `${CATEGORY_FILTER_PILLS.find((p) => p.id === partnerFilter)?.label || 'Filtered Programs'} (${filteredPrimary.length} Verified Matches):`}
               </div>
               {filteredPrimary.length > 4 && (
                 <button
@@ -963,7 +785,7 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   No programs matched that exact filter in {session.municipality}.
                 </div>
                 <p className="text-xs text-[#547078]">
-                  Try clearing your search or switching to All Lower Mainland Areas to see all 27 Options+, Sources BC, schools, and local food banks.
+                  Try clearing your search or switching to All Lower Mainland Areas to see all 78 verified programs across the region.
                 </p>
                 <div className="flex justify-center gap-2 pt-1">
                   <button
@@ -975,7 +797,7 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                     }}
                     className="px-4 py-2 rounded-xl ocean-btn text-white text-xs font-semibold cursor-pointer"
                   >
-                    Show All Lower Mainland Programs
+                    Show All 78 Lower Mainland Programs
                   </button>
                 </div>
               </div>
@@ -983,6 +805,9 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
 
             {visiblePrimaryPrograms.map((prog, index) => {
               const isPinned = session.pinned_program_id === prog.program_id;
+              const sectionMeta = getProgramSectionMeta(prog);
+              const contactBadges = parseContactBadges(prog.contact_phone_or_email);
+              const cityTier = getCityMatchTier(prog, session.municipality);
               return (
                 <div
                   key={prog.program_id}
@@ -995,11 +820,20 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border ${sectionMeta.badgeClasses}`}
+                        >
+                          {sectionMeta.shortBadge}
+                        </span>
                         <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#e5f6f3] text-[#1b7a6e] border border-[#bce5dd]">
                           Option #{index + 1} • {prog.municipality}
+                          {session.municipality !== 'All' &&
+                            cityTier === 'regional' &&
+                            prog.municipality !== session.municipality &&
+                            ` (Serves ${session.municipality})`}
                         </span>
                         <span className="text-xs font-medium text-[#2c6e9b]">
-                          How to Join: {prog.intake_type.replace('_', ' ')} • Wait Time: ~{prog.waitlist_weeks_estimate === 0 ? 'Same Week' : `${prog.waitlist_weeks_estimate} wk`}
+                          How to Join: {prog.intake_type.replace('_', ' ')} • Wait Time: ~{prog.waitlist_weeks_estimate === 0 ? 'Same Day / Walk-In' : `${prog.waitlist_weeks_estimate} wk`}
                         </span>
                       </div>
                       <h4 className="text-sm font-bold text-[#163038] mt-1.5">
@@ -1035,7 +869,7 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                         }`}
                       >
                         <Pin className="w-3.5 h-3.5" />
-                        {isPinned ? '✓ Saved to Phone' : 'Save as My Next Step'}
+                        {isPinned ? `✓ ${sectionMeta.savedLabel}` : sectionMeta.saveLabel}
                       </button>
                     </div>
                   </div>
@@ -1048,9 +882,31 @@ export const CoordinatorTriagePanel: React.FC<CoordinatorTriagePanelProps> = ({
                     <span className="flex items-center gap-1.5 font-medium text-[#2c525c]">
                       <Bus className="w-3.5 h-3.5 text-[#2c6e9b]" /> Transit: {prog.nearest_transit_stop}
                     </span>
-                    <span className="flex items-center gap-1.5 font-medium text-[#1b7a6e]">
-                      <Phone className="w-3.5 h-3.5" /> Friendly Contact: {prog.contact_lead_name} ({prog.contact_phone_or_email})
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-semibold text-[#1b5270]">
+                        {prog.contact_lead_name}:
+                      </span>
+                      {contactBadges.map((b, bIdx) =>
+                        b.href ? (
+                          <a
+                            key={`${prog.program_id}-contact-${bIdx}`}
+                            href={b.href}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white hover:bg-[#e5f6f3] border border-[#bce5dd] text-[#0f5248] font-semibold transition-colors"
+                          >
+                            <Phone className="w-3 h-3 text-[#1ca796]" />
+                            {b.label !== 'Call' && b.label !== 'Email' ? `${b.label}: ` : ''}
+                            {b.value}
+                          </a>
+                        ) : (
+                          <span
+                            key={`${prog.program_id}-contact-${bIdx}`}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-[#dce7ec] text-[#2c525c] font-medium"
+                          >
+                            {b.value}
+                          </span>
+                        )
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-1.5 mt-2.5">

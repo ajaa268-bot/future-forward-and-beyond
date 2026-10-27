@@ -8,6 +8,11 @@ import {
   DDLQueryFilterParams
 } from '../src/types/navigator.js';
 import {
+  getProgramPrimarySectionId,
+  getCityMatchTier,
+  PrimarySectionId
+} from '../src/types/programGrouping.js';
+import {
   SEEDED_VERIFIED_PROGRAMS,
   SEEDED_WORKBOOK_MODULES,
   INITIAL_DEMO_SESSION
@@ -159,12 +164,54 @@ export class NavigatorDatabaseEngine {
       (p) => p.operational_status === 'Active' && p.days_since_verified <= 14
     );
 
-    // 1. Immediate Relief & Food Matches (Maslow Tier 1)
+    // Map Step 5 active barriers to PrimarySectionId so tapping Step 5 buttons boosts the exact matching category
+    const activeBarriers = session?.active_barriers || [];
+    const prioritizedSections = new Set<PrimarySectionId>();
+    if (activeBarriers.includes('Safe Shelter / Housing & Rent Subsidy')) {
+      prioritizedSections.add('HOUSING_HOMELESS');
+      prioritizedSections.add('SUBSIDIES_LEISURE');
+    }
+    if (activeBarriers.includes('Mental Health & Crisis Support')) {
+      prioritizedSections.add('MENTAL_HEALTH_CRISIS');
+    }
+    if (activeBarriers.includes('Free Counselors & Emotional Support')) {
+      prioritizedSections.add('COUNSELORS_THERAPY');
+    }
+    if (activeBarriers.includes('Pregnancy, Baby & Family Support')) {
+      prioritizedSections.add('PREGNANCY_BABY');
+    }
+    if (activeBarriers.includes('Hospitals, Doctors & Medical Labs')) {
+      prioritizedSections.add('HOSPITALS_LABS');
+    }
+    if (activeBarriers.includes('Youth, Families & Seniors (55+)')) {
+      prioritizedSections.add('ALL_AGES_SENIORS_YOUTH');
+    }
+    if (activeBarriers.includes('Disability (PWD) / Income Assistance')) {
+      prioritizedSections.add('SUBSIDIES_LEISURE');
+    }
+    if (activeBarriers.includes('Physical Barriers & Mobility Gear')) {
+      prioritizedSections.add('PHYSICAL_BARRIERS');
+    }
+    if (activeBarriers.includes('AA / NA / CA / CoDA Peer Recovery')) {
+      prioritizedSections.add('RECOVERY_12STEP');
+    }
+    if (activeBarriers.includes('Legal Aid & First Responder Help')) {
+      prioritizedSections.add('LAW_FIRST_RESPONDERS');
+    }
+    if (activeBarriers.includes('Groceries / Meals')) {
+      prioritizedSections.add('FOOD_PROGRAMS');
+    }
+
+    // 1. Immediate Relief, Health, Sanctuary & Food Matches (Maslow Tier 1)
     const immediate_relief_matches = activePool
       .filter((p) => p.category === 'Survival_Relief')
       .map((prog) => {
-        const cityFit = this.matchesCity(prog.municipality, filters.municipality);
-        const score = cityFit === 'exact' ? 100 : cityFit === 'regional' ? 50 : 10;
+        const cityFit = getCityMatchTier(prog, filters.municipality);
+        let score = cityFit === 'exact' ? 100 : cityFit === 'regional' ? 65 : 10;
+        const secId = getProgramPrimarySectionId(prog);
+        if (prioritizedSections.has(secId)) {
+          score += 80;
+        }
         return { prog, score };
       })
       .sort((a, b) => b.score - a.score)

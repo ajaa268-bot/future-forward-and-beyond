@@ -10,6 +10,11 @@ import {
   ClientWorkbookSession,
   VerifiedProgramRecord
 } from '../types/navigator.js';
+import {
+  GROUPED_24_7_HELPLINES,
+  getProgramSectionMeta,
+  parseContactBadges
+} from '../types/programGrouping.js';
 
 interface ClientCompanionPhoneProps {
   session: ClientWorkbookSession;
@@ -100,82 +105,146 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
         </div>
 
         {/* 2. "My Next 1 Step" Card */}
-        {pinnedProgram && (
-          <div className="bg-[#f3fbf9] border-2 border-[#2a9d8f] rounded-2xl p-4 space-y-2.5 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#2a9d8f] text-white">
-                My Next 1 Step
-              </span>
-              <button
-                onClick={() =>
-                  speakText(
-                    `Your next step is ${pinnedProgram.program_name} in ${pinnedProgram.municipality}. Bus or SkyTrain stop: ${pinnedProgram.nearest_transit_stop}. Contact: ${pinnedProgram.contact_lead_name}.`
-                  )
-                }
-                className="text-[#1b7a6e] hover:text-[#163038] cursor-pointer"
-                title="Listen Out Loud"
-              >
-                <Volume2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="text-sm font-bold text-[#163038]">{pinnedProgram.program_name}</div>
-            <div className="text-xs text-[#4f6a72]">{pinnedProgram.organization_name}</div>
-
-            <div className="bg-white rounded-xl p-3 space-y-1.5 text-xs border border-[#d8ece7]">
-              <div className="flex items-center gap-1.5 text-[#23638a] font-medium">
-                <Bus className="w-3.5 h-3.5 shrink-0" />
-                <span>{pinnedProgram.nearest_transit_stop}</span>
+        {pinnedProgram && (() => {
+          const pinnedMeta = getProgramSectionMeta(pinnedProgram);
+          const pinnedBadges = parseContactBadges(pinnedProgram.contact_phone_or_email);
+          return (
+            <div className="bg-[#f3fbf9] border-2 border-[#2a9d8f] rounded-2xl p-4 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-[#2a9d8f] text-white">
+                    My Next 1 Step
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${pinnedMeta.badgeClasses}`}
+                  >
+                    {pinnedMeta.shortBadge}
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    speakText(
+                      `Your next step is ${pinnedProgram.program_name} in ${pinnedProgram.municipality}. Bus or SkyTrain stop: ${pinnedProgram.nearest_transit_stop}. Contact: ${pinnedProgram.contact_lead_name}.`
+                    )
+                  }
+                  className="text-[#1b7a6e] hover:text-[#163038] cursor-pointer"
+                  title="Listen Out Loud"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
               </div>
-              <div className="flex items-center gap-1.5 text-[#1b7a6e] font-medium">
-                <Phone className="w-3.5 h-3.5 shrink-0" />
-                <span>{pinnedProgram.contact_lead_name} ({pinnedProgram.contact_phone_or_email})</span>
+
+              <div className="text-sm font-bold text-[#163038]">{pinnedProgram.program_name}</div>
+              <div className="text-xs text-[#4f6a72]">
+                {pinnedProgram.organization_name} • {pinnedProgram.municipality}
+              </div>
+
+              <div className="bg-white rounded-xl p-3 space-y-2 text-xs border border-[#d8ece7]">
+                <div className="flex items-center gap-1.5 text-[#23638a] font-medium">
+                  <Bus className="w-3.5 h-3.5 shrink-0" />
+                  <span>{pinnedProgram.nearest_transit_stop}</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[11px] font-semibold text-[#1b5270]">
+                    {pinnedProgram.contact_lead_name}:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {pinnedBadges.map((b, idx) =>
+                      b.href ? (
+                        <a
+                          key={`pinned-badge-${idx}`}
+                          href={b.href}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#f2faf8] hover:bg-[#dff3ee] border border-[#bce5dd] text-[#0f5248] font-semibold text-[11px]"
+                        >
+                          <Phone className="w-3 h-3 text-[#1ca796]" />
+                          {b.label !== 'Call' && b.label !== 'Email' ? `${b.label}: ` : ''}
+                          {b.value}
+                        </a>
+                      ) : (
+                        <span
+                          key={`pinned-badge-${idx}`}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#f6f9fa] border border-[#dce7ec] text-[#2c525c] text-[11px]"
+                        >
+                          {b.value}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-[#28454e] linen-card rounded-xl p-2.5 border border-[#e3dccf]">
+                <strong className="text-[#1b7a6e]">Easy First Step:</strong>{' '}
+                {session.next_micro_step_text}
               </div>
             </div>
+          );
+        })()}
 
-            <div className="text-[11px] text-[#28454e] linen-card rounded-xl p-2.5 border border-[#e3dccf]">
-              <strong className="text-[#1b7a6e]">Easy First Step:</strong>{' '}
-              {session.next_micro_step_text}
+        {/* 3. Saved Immediate Support Card */}
+        {reliefProgram && (() => {
+          const reliefMeta = getProgramSectionMeta(reliefProgram);
+          const reliefBadges = parseContactBadges(reliefProgram.contact_phone_or_email);
+          return (
+            <div className="bg-[#eaf4fa] border border-[#bddbf0] rounded-2xl p-3.5 space-y-1.5">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[10px] font-bold uppercase text-[#1e5678]">
+                  ★ {reliefMeta.savedLabel} ({reliefProgram.municipality})
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    speakText(
+                      `Same-day support: ${reliefProgram.program_name} in ${reliefProgram.municipality}. Transit: ${reliefProgram.nearest_transit_stop}. Contact: ${reliefProgram.contact_lead_name} at ${reliefProgram.contact_phone_or_email}.`
+                    )
+                  }
+                  className="text-[#1e5678] hover:text-[#163038] cursor-pointer"
+                  title="Listen Out Loud"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="text-xs font-bold text-[#163038]">{reliefProgram.program_name}</div>
+              <div className="text-[11px] text-[#35565f]">{reliefProgram.organization_name}</div>
+              <div className="text-[11px] text-[#23638a] font-medium flex items-center gap-1 pt-0.5">
+                <Bus className="w-3 h-3 shrink-0" /> {reliefProgram.nearest_transit_stop}
+              </div>
+              <div className="pt-1 space-y-1">
+                <div className="text-[11px] font-semibold text-[#1b5270]">
+                  {reliefProgram.contact_lead_name}:
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {reliefBadges.map((b, idx) =>
+                    b.href ? (
+                      <a
+                        key={`relief-badge-${idx}`}
+                        href={b.href}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white hover:bg-[#e5f6f3] border border-[#bce5dd] text-[#0f5248] font-semibold text-[10px]"
+                      >
+                        <Phone className="w-2.5 h-2.5 text-[#1ca796]" />
+                        {b.label !== 'Call' && b.label !== 'Email' ? `${b.label}: ` : ''}
+                        {b.value}
+                      </a>
+                    ) : (
+                      <span
+                        key={`relief-badge-${idx}`}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-[#dce7ec] text-[#2c525c] text-[10px]"
+                      >
+                        {b.value}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
-        {/* 3. Saved Local Food Bank & Immediate Help Today */}
-        {reliefProgram && (
-          <div className="bg-[#eaf4fa] border border-[#bddbf0] rounded-2xl p-3.5 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase text-[#1e5678]">
-                ★ Saved Food Bank &amp; Same-Day Help ({reliefProgram.municipality})
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  speakText(
-                    `Food bank and same-day help: ${reliefProgram.program_name} in ${reliefProgram.municipality}. Transit: ${reliefProgram.nearest_transit_stop}. Contact: ${reliefProgram.contact_lead_name} at ${reliefProgram.contact_phone_or_email}.`
-                  )
-                }
-                className="text-[#1e5678] hover:text-[#163038] cursor-pointer"
-                title="Listen Out Loud"
-              >
-                <Volume2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <div className="text-xs font-bold text-[#163038]">{reliefProgram.program_name}</div>
-            <div className="text-[11px] text-[#35565f]">{reliefProgram.organization_name}</div>
-            <div className="text-[11px] text-[#23638a] font-medium flex items-center gap-1 pt-0.5">
-              <Bus className="w-3 h-3 shrink-0" /> {reliefProgram.nearest_transit_stop}
-            </div>
-            <div className="text-[11px] text-[#1b7a6e] font-medium flex items-center gap-1">
-              <Phone className="w-3 h-3 shrink-0" /> {reliefProgram.contact_lead_name} ({reliefProgram.contact_phone_or_email})
-            </div>
-          </div>
-        )}
-
-        {/* 3B. Pocket 24/7 Emergency, Counselors, Pregnancy, Hospitals/Labs & All-Ages Sanctuary Card */}
-        <div className="bg-gradient-to-br from-[#e6f6f3] to-[#eaf4fa] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-1.5">
+        {/* 3B. Pocket 24/7 Grouped Sanctuary Helplines Card */}
+        <div className="bg-gradient-to-br from-[#e6f6f3] to-[#eaf4fa] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase text-[#145e54]">
-              24/7 Sanctuary: Crisis, Counselors, Pregnancy &amp; Hospitals
+              24/7 Grouped Sanctuary Lines (Tap to Call)
             </span>
             <button
               type="button"
@@ -190,28 +259,27 @@ export const ClientCompanionPhone: React.FC<ClientCompanionPhoneProps> = ({
               <Volume2 className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="bg-white/95 rounded-xl p-2.5 text-[11px] text-[#163038] space-y-1 border border-[#cde8e2]">
-            <div>
-              <strong>Emergency / Nurse / Shelter:</strong> 9-1-1 • Nurse: 8-1-1 • Shelter: 2-1-1
-            </div>
-            <div>
-              <strong>Mental Health &amp; Crisis:</strong> 9-8-8 • Fraser: 604-951-8855 • Car 67: 604-599-0502
-            </div>
-            <div>
-              <strong>Free Counselor (25+ Lang):</strong> 778-321-3054 • <strong>Options+:</strong> 604-596-4321
-            </div>
-            <div>
-              <strong>Pregnancy &amp; Baby Care:</strong> 604-587-3800 • <strong>Tiny Bundles:</strong> 604-581-5443
-            </div>
-            <div>
-              <strong>Hospitals &amp; No-ID Labs:</strong> SMH: 604-581-2211 • Street Lab: 604-587-3750
-            </div>
-            <div>
-              <strong>Youth (12–24):</strong> 1-800-668-6868 • <strong>Seniors (55+):</strong> 1-877-952-3181
-            </div>
-            <div>
-              <strong>AA:</strong> 604-434-3933 • <strong>NA:</strong> 604-873-1018 • <strong>CA:</strong> 604-662-8500 • <strong>Legal:</strong> 604-408-2172
-            </div>
+          <div className="space-y-1.5">
+            {GROUPED_24_7_HELPLINES.map((group) => (
+              <div
+                key={`pocket-${group.id}`}
+                className={`rounded-xl p-2 text-[10px] text-[#163038] space-y-1 border ${group.badgeColor}`}
+              >
+                <div className="font-bold text-[#14343d]">{group.title}</div>
+                <div className="flex flex-wrap gap-1">
+                  {group.lines.map((item) => (
+                    <a
+                      key={`pocket-${group.id}-${item.name}`}
+                      href={`tel:${item.tel}`}
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white hover:bg-[#dff3ee] border border-[#bce5dd] text-[#0f5248] font-semibold"
+                    >
+                      <span className="text-[#35565f] font-medium">{item.name}:</span>
+                      <span>{item.number}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

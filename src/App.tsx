@@ -12,6 +12,7 @@ import {
   Wind,
   Search,
   Pin,
+  Phone,
   X
 } from 'lucide-react';
 import {
@@ -19,29 +20,23 @@ import {
   VerifiedProgramRecord,
   ModuleCode
 } from './types/navigator.js';
+import {
+  CATEGORY_FILTER_PILLS,
+  GROUPED_24_7_HELPLINES,
+  SANCTUARY_SECTIONS,
+  SanctuaryCategoryFilter,
+  getCategoryFilterRank,
+  getCityMatchTier,
+  getProgramPrimarySectionId,
+  getProgramSectionMeta,
+  parseContactBadges
+} from './types/programGrouping.js';
 import { WorkbookModulesCanvas } from './components/WorkbookModulesCanvas.js';
 import { CoordinatorTriagePanel } from './components/CoordinatorTriagePanel.js';
 import { ClientCompanionPhone } from './components/ClientCompanionPhone.js';
 
 type DeviceMode = 'split_copilot' | 'tablet_only' | 'phone_only' | 'architecture_ddl';
-type DirectoryCategoryFilter =
-  | 'ALL'
-  | 'COUNSELORS_THERAPY'
-  | 'PREGNANCY_BABY'
-  | 'HOSPITALS_LABS'
-  | 'ALL_AGES_SENIORS_YOUTH'
-  | 'HOUSING_HOMELESS'
-  | 'SUBSIDIES_LEISURE'
-  | 'PHYSICAL_BARRIERS'
-  | 'MENTAL_HEALTH_CRISIS'
-  | 'RECOVERY_12STEP'
-  | 'LOCAL_SOCIETIES'
-  | 'LAW_FIRST_RESPONDERS'
-  | 'OPTIONS_PLUS'
-  | 'SOURCES_BC'
-  | 'SCHOOLS'
-  | 'FOOD_BANKS'
-  | 'HANDS_ON';
+type DirectoryCategoryFilter = SanctuaryCategoryFilter;
 
 export function App() {
   const [session, setSession] = useState<ClientWorkbookSession | null>(null);
@@ -451,20 +446,20 @@ export function App() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-bold text-[#14343d]">
-                    Complete Lower Mainland Sanctuary Directory (64+ Verified Programs for All Ages)
+                    Complete Lower Mainland Sanctuary Directory (78 Verified Programs Grouped by Category)
                   </h3>
                   <p className="text-xs text-[#4b6a73] mt-0.5">
-                    Counselors, Pregnancy &amp; Baby Care, Hospitals &amp; Labs, Youth &amp; Seniors (55+), Shelters, Subsidies, Options+, Sources BC, Schools &amp; Food Banks.
+                    Every program and phone number is grouped by its dedicated category—Hospitals &amp; Labs, Free Counselors, Pregnancy &amp; Baby Care, Shelters, Food Banks, Subsidies, Options+, Sources BC &amp; Schools.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-medium text-[#4a656d]">Filter City:</span>
                   <select
                     value={directoryCity}
                     onChange={(e) => setDirectoryCity(e.target.value)}
                     className="bg-[#f7f4ed] border border-[#dcd4c4] rounded-xl px-3 py-1.5 text-xs font-semibold text-[#163038] cursor-pointer focus:outline-none focus:border-[#2a9d8f]"
                   >
-                    <option value="All">All Lower Mainland Cities</option>
+                    <option value="All">All Lower Mainland Cities (78 Programs)</option>
                     <option value="Surrey">Surrey (Whalley, Newton, Guildford, Cloverdale)</option>
                     <option value="White Rock / South Surrey">White Rock / South Surrey</option>
                     <option value="Langley">Langley</option>
@@ -475,385 +470,365 @@ export function App() {
                     <option value="Vancouver">Vancouver</option>
                     <option value="Richmond">Richmond</option>
                   </select>
-                </div>
-              </div>
-
-              {/* Directory Search & Partner Filter Bar */}
-              <div className="linen-card border border-[#e3dccf] rounded-2xl p-3.5 space-y-2.5">
-                <div className="relative">
-                  <Search className="w-4 h-4 text-[#547078] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={directorySearch}
-                    onChange={(e) => setDirectorySearch(e.target.value)}
-                    placeholder="Search counselors, pregnancy, baby formula/diapers, hospitals, LifeLabs, seniors 55+, youth, Options+, Sources BC, shelters, food banks..."
-                    className="w-full bg-white border border-[#dcd4c4] rounded-xl pl-9 pr-8 py-2 text-xs text-[#163038] placeholder:text-[#6c858d] focus:outline-none focus:border-[#2a9d8f]"
-                  />
-                  {directorySearch && (
+                  {(directoryCity !== 'All' || directoryCategory !== 'ALL' || directorySearch.trim() !== '') && (
                     <button
                       type="button"
-                      onClick={() => setDirectorySearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#547078] hover:text-[#163038] cursor-pointer"
+                      onClick={() => {
+                        setDirectoryCity('All');
+                        setDirectoryCategory('ALL');
+                        setDirectorySearch('');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#e6f6f3] border border-[#bce5dd] text-xs font-semibold text-[#1b7a6e] cursor-pointer transition-colors"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      Reset All Filters
                     </button>
                   )}
                 </div>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {(
-                    [
-                      { id: 'ALL', label: 'All 64+ Sanctuary Programs' },
-                      { id: 'COUNSELORS_THERAPY', label: 'Free Counselors & Therapy' },
-                      { id: 'PREGNANCY_BABY', label: 'Pregnancy, Maternity & Baby Care' },
-                      { id: 'HOSPITALS_LABS', label: 'Hospitals, Walk-In Doctors & Labs' },
-                      { id: 'ALL_AGES_SENIORS_YOUTH', label: 'All Ages: Youth, Families & Seniors (55+)' },
-                      { id: 'HOUSING_HOMELESS', label: 'Homelessness & Safe Shelter' },
-                      { id: 'SUBSIDIES_LEISURE', label: 'Subsidies, PWD & Leisure Pass' },
-                      { id: 'PHYSICAL_BARRIERS', label: 'Physical Barriers & Mobility' },
-                      { id: 'MENTAL_HEALTH_CRISIS', label: 'Mental Health & 24/7 Crisis' },
-                      { id: 'RECOVERY_12STEP', label: 'AA / NA / CA / CoDA Recovery' },
-                      { id: 'LOCAL_SOCIETIES', label: 'All Local Societies' },
-                      { id: 'LAW_FIRST_RESPONDERS', label: 'Law, Police, Fire & Ambulance' },
-                      { id: 'OPTIONS_PLUS', label: 'Options+' },
-                      { id: 'SOURCES_BC', label: 'Sources BC' },
-                      { id: 'SCHOOLS', label: 'Schools & Colleges' },
-                      { id: 'FOOD_BANKS', label: 'Local Food Banks & Hot Meals' },
-                      { id: 'HANDS_ON', label: 'Hands-On Work & Trades' }
-                    ] as Array<{ id: DirectoryCategoryFilter; label: string }>
-                  ).map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setDirectoryCategory(cat.id)}
-                      className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
-                        directoryCategory === cat.id
-                          ? 'ocean-btn text-white shadow-2xs'
-                          : 'bg-white text-[#35565f] hover:bg-[#e6f6f3] border border-[#dcd4c4]'
-                      }`}
+              {/* 24/7 Grouped Sanctuary Helplines Bar */}
+              <div className="bg-gradient-to-r from-[#e5f5f2] via-[#eaf4fa] to-[#f4f0e6] border border-[#b4dfd7] rounded-2xl p-3.5 space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[#145e54] flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-[#1ca796]" /> 24/7 Grouped Sanctuary Helplines — Organized by Need (Tap Any Number to Call)
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+                  {GROUPED_24_7_HELPLINES.map((group) => (
+                    <div
+                      key={`dir-${group.id}`}
+                      className={`rounded-xl px-3 py-2 border space-y-1 ${group.badgeColor}`}
                     >
-                      {cat.label}
-                    </button>
+                      <div className="font-bold text-[#14343d]">{group.title}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.lines.map((item) => (
+                          <a
+                            key={`dir-${group.id}-${item.name}`}
+                            href={`tel:${item.tel}`}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white hover:bg-[#dff3ee] border border-[#bce5dd] text-[#0f5248] font-semibold transition-colors"
+                            title={item.note}
+                          >
+                            <span className="text-[#35565f] font-medium">{item.name}:</span>
+                            <span>{item.number}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-[#e2d6c1] bg-[#f8f2e7] text-[#45636b] font-semibold">
-                      <th className="py-3 px-3.5 rounded-tl-xl">Program &amp; Community Partner</th>
-                      <th className="py-3 px-3.5">City / Transit</th>
-                      <th className="py-3 px-3.5">Contact Person</th>
-                      <th className="py-3 px-3.5">Hands-On / No Exam</th>
-                      <th className="py-3 px-3.5">Free Support Included</th>
-                      <th className="py-3 px-3.5 rounded-tr-xl text-right">Save to Phone</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#ebe1d1]">
-                    {(allPrograms.length > 0
-                      ? allPrograms
-                      : [...ddl.immediate_relief_matches, ...ddl.primary_matches]
+              {/* Directory Search & Category Filter Bar */}
+              {(() => {
+                const rawList =
+                  allPrograms.length > 0
+                    ? allPrograms
+                    : [...ddl.immediate_relief_matches, ...ddl.primary_matches];
+                const seenIds = new Set<string>();
+                const dedupedList = rawList.filter((p) => {
+                  if (seenIds.has(p.program_id)) return false;
+                  seenIds.add(p.program_id);
+                  return true;
+                });
+
+                const matchesSearch = (p: VerifiedProgramRecord) => {
+                  if (!directorySearch.trim()) return true;
+                  const q = directorySearch.trim().toLowerCase();
+                  const sectionMeta = getProgramSectionMeta(p);
+                  const hay = [
+                    p.program_name,
+                    p.organization_name,
+                    p.municipality,
+                    p.street_address,
+                    p.nearest_transit_stop,
+                    p.contact_lead_name,
+                    p.contact_phone_or_email,
+                    p.highlight_note,
+                    sectionMeta.title,
+                    sectionMeta.shortBadge,
+                    ...(p.hobby_tags || [])
+                  ]
+                    .join(' ')
+                    .toLowerCase();
+                  return hay.includes(q);
+                };
+
+                const cityAndSearchFiltered = dedupedList.filter(
+                  (p) => getCityMatchTier(p, directoryCity) !== 'none' && matchesSearch(p)
+                );
+
+                const finalFiltered = cityAndSearchFiltered
+                  .filter((p) => getCategoryFilterRank(p, directoryCategory) > 0)
+                  .sort((a, b) => {
+                    const tierA = getCityMatchTier(a, directoryCity) === 'exact' ? 0 : 1;
+                    const tierB = getCityMatchTier(b, directoryCity) === 'exact' ? 0 : 1;
+                    if (tierA !== tierB) return tierA - tierB;
+                    const rankA = getCategoryFilterRank(a, directoryCategory);
+                    const rankB = getCategoryFilterRank(b, directoryCategory);
+                    if (rankA !== rankB) return rankA - rankB;
+                    return a.program_name.localeCompare(b.program_name);
+                  });
+
+                // Group programs cleanly by their primary Sanctuary Section
+                const orderedSections = [...SANCTUARY_SECTIONS].sort((a, b) => {
+                  const aMatchesFilter = directoryCategory === a.id;
+                  const bMatchesFilter = directoryCategory === b.id;
+                  if (aMatchesFilter && !bMatchesFilter) return -1;
+                  if (!aMatchesFilter && bMatchesFilter) return 1;
+                  return 0;
+                });
+
+                const groupedSections = orderedSections
+                  .map((sec) => ({
+                    section: sec,
+                    items: finalFiltered.filter(
+                      (p) => getProgramPrimarySectionId(p) === sec.id
                     )
-                      .filter((p) => {
-                        if (directoryCity !== 'All' && p.municipality !== directoryCity) {
-                          return false;
-                        }
-                        const hay = [
-                          p.program_name,
-                          p.organization_name,
-                          p.municipality,
-                          p.street_address,
-                          p.highlight_note,
-                          ...(p.hobby_tags || [])
-                        ]
-                          .join(' ')
-                          .toLowerCase();
-                        if (directorySearch.trim() && !hay.includes(directorySearch.trim().toLowerCase())) {
-                          return false;
-                        }
-                        if (directoryCategory === 'COUNSELORS_THERAPY') {
+                  }))
+                  .filter((g) => g.items.length > 0);
+
+                return (
+                  <>
+                    <div className="linen-card border border-[#e3dccf] rounded-2xl p-3.5 space-y-2.5">
+                      <div className="relative">
+                        <Search className="w-4 h-4 text-[#547078] absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={directorySearch}
+                          onChange={(e) => setDirectorySearch(e.target.value)}
+                          placeholder="Search by program name, city, phone number, hospital, LifeLabs, counselor, pregnancy, shelter, Options+, Sources BC..."
+                          className="w-full bg-white border border-[#dcd4c4] rounded-xl pl-9 pr-8 py-2 text-xs text-[#163038] placeholder:text-[#6c858d] focus:outline-none focus:border-[#2a9d8f]"
+                        />
+                        {directorySearch && (
+                          <button
+                            type="button"
+                            onClick={() => setDirectorySearch('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#547078] hover:text-[#163038] cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {CATEGORY_FILTER_PILLS.map((cat) => {
+                          const count = cityAndSearchFiltered.filter(
+                            (p) => getCategoryFilterRank(p, cat.id) > 0
+                          ).length;
+                          const active = directoryCategory === cat.id;
                           return (
-                            hay.includes('counselor') ||
-                            hay.includes('counselors') ||
-                            hay.includes('counseling') ||
-                            hay.includes('counselling') ||
-                            hay.includes('therapy') ||
-                            hay.includes('therapist') ||
-                            hay.includes('moving forward') ||
-                            hay.includes('kuu-us') ||
-                            hay.includes('frafca') ||
-                            hay.includes('sacs') ||
-                            hay.includes('cmha') ||
-                            hay.includes('foundry')
-                          );
-                        }
-                        if (directoryCategory === 'PREGNANCY_BABY') {
-                          return (
-                            hay.includes('pregnancy') ||
-                            hay.includes('pregnant') ||
-                            hay.includes('prenatal') ||
-                            hay.includes('maternity') ||
-                            hay.includes('baby') ||
-                            hay.includes('newborn') ||
-                            hay.includes('infant') ||
-                            hay.includes('perinatal') ||
-                            hay.includes('maxxine wright') ||
-                            hay.includes('healthiest babies') ||
-                            hay.includes('tiny bundles') ||
-                            hay.includes('fir square') ||
-                            hay.includes('diapers') ||
-                            hay.includes('formula') ||
-                            hay.includes('sexual health')
-                          );
-                        }
-                        if (directoryCategory === 'HOSPITALS_LABS') {
-                          return (
-                            hay.includes('hospital') ||
-                            hay.includes('hospitals') ||
-                            hay.includes('upcc') ||
-                            hay.includes('urgent') ||
-                            hay.includes('lifelabs') ||
-                            hay.includes('bloodwork') ||
-                            hay.includes('ultrasound') ||
-                            hay.includes('x-ray') ||
-                            hay.includes('quibble creek') ||
-                            hay.includes('street nurse') ||
-                            hay.includes('outpatient') ||
-                            hay.includes('jim pattison') ||
-                            hay.includes('surrey memorial') ||
-                            hay.includes('peace arch') ||
-                            hay.includes('royal columbian') ||
-                            hay.includes('vgh') ||
-                            hay.includes('st. paul')
-                          );
-                        }
-                        if (directoryCategory === 'ALL_AGES_SENIORS_YOUTH') {
-                          return (
-                            hay.includes('senior') ||
-                            hay.includes('seniors') ||
-                            hay.includes('elder') ||
-                            hay.includes('55+') ||
-                            hay.includes('65+') ||
-                            hay.includes('safer') ||
-                            hay.includes('better at home') ||
-                            hay.includes('brella') ||
-                            hay.includes('children') ||
-                            hay.includes('child care') ||
-                            hay.includes('childcare') ||
-                            hay.includes('family') ||
-                            hay.includes('families') ||
-                            hay.includes('jordan') ||
-                            hay.includes('youth') ||
-                            hay.includes('12–24') ||
-                            hay.includes('12-24') ||
-                            hay.includes('foundry') ||
-                            hay.includes('kids help phone') ||
-                            hay.includes('covenant house')
-                          );
-                        }
-                        if (directoryCategory === 'OPTIONS_PLUS') return hay.includes('options');
-                        if (directoryCategory === 'SOURCES_BC') return hay.includes('sources');
-                        if (directoryCategory === 'LOCAL_SOCIETIES') {
-                          return (
-                            hay.includes('society') ||
-                            hay.includes('diversecity') ||
-                            hay.includes('pics') ||
-                            hay.includes('lcss') ||
-                            hay.includes('purpose') ||
-                            hay.includes('ugm') ||
-                            hay.includes('first united') ||
-                            hay.includes('lookout') ||
-                            hay.includes('phoenix') ||
-                            hay.includes('uniti') ||
-                            hay.includes('posabilities') ||
-                            hay.includes('efry') ||
-                            hay.includes('atira') ||
-                            hay.includes('options') ||
-                            hay.includes('sources')
-                          );
-                        }
-                        if (directoryCategory === 'HOUSING_HOMELESS') {
-                          return (
-                            hay.includes('homeless') ||
-                            hay.includes('shelter') ||
-                            hay.includes('housing') ||
-                            hay.includes('rent') ||
-                            hay.includes('lookout') ||
-                            hay.includes('raincity') ||
-                            hay.includes('phoenix') ||
-                            hay.includes('covenant') ||
-                            hay.includes('efry') ||
-                            hay.includes('atira')
-                          );
-                        }
-                        if (directoryCategory === 'SUBSIDIES_LEISURE') {
-                          return (
-                            hay.includes('subsidy') ||
-                            hay.includes('subsidies') ||
-                            hay.includes('pwd') ||
-                            hay.includes('disability') ||
-                            hay.includes('rent bank') ||
-                            hay.includes('leisure') ||
-                            hay.includes('pool') ||
-                            hay.includes('bus pass') ||
-                            p.provides_living_stipend
-                          );
-                        }
-                        if (directoryCategory === 'PHYSICAL_BARRIERS') {
-                          return (
-                            hay.includes('physical') ||
-                            hay.includes('mobility') ||
-                            hay.includes('wheelchair') ||
-                            hay.includes('neil squire') ||
-                            hay.includes('spinal') ||
-                            hay.includes('disability alliance') ||
-                            hay.includes('handydart') ||
-                            hay.includes('ergonomic') ||
-                            hay.includes('uniti') ||
-                            hay.includes('posabilities') ||
-                            hay.includes('leisure')
-                          );
-                        }
-                        if (directoryCategory === 'MENTAL_HEALTH_CRISIS') {
-                          return (
-                            hay.includes('mental health') ||
-                            hay.includes('crisis') ||
-                            hay.includes('cmha') ||
-                            hay.includes('clubhouse') ||
-                            hay.includes('stepping stone') ||
-                            hay.includes('foundry') ||
-                            hay.includes('pact') ||
-                            hay.includes('cares') ||
-                            hay.includes('9-8-8') ||
-                            hay.includes('counseling')
-                          );
-                        }
-                        if (directoryCategory === 'RECOVERY_12STEP') {
-                          return (
-                            hay.includes('anonymous') ||
-                            hay.includes('12 step') ||
-                            hay.includes('recovery') ||
-                            hay.includes('alcoholics') ||
-                            hay.includes('narcotics') ||
-                            hay.includes('cocaine') ||
-                            hay.includes('coda') ||
-                            hay.includes('phoenix') ||
-                            hay.includes('ugm')
-                          );
-                        }
-                        if (directoryCategory === 'LAW_FIRST_RESPONDERS') {
-                          return (
-                            hay.includes('legal') ||
-                            hay.includes('law') ||
-                            hay.includes('lawyer') ||
-                            hay.includes('eviction') ||
-                            hay.includes('tenant') ||
-                            hay.includes('police') ||
-                            hay.includes('fire') ||
-                            hay.includes('ambulance') ||
-                            hay.includes('paramedic') ||
-                            hay.includes('car 67') ||
-                            hay.includes('car 87') ||
-                            hay.includes('9-1-1') ||
-                            hay.includes('8-1-1') ||
-                            hay.includes('victim')
-                          );
-                        }
-                        if (directoryCategory === 'SCHOOLS') {
-                          return (
-                            hay.includes('kpu') ||
-                            hay.includes('bcit') ||
-                            hay.includes('vcc') ||
-                            hay.includes('douglas') ||
-                            hay.includes('surrey schools') ||
-                            hay.includes('school') ||
-                            hay.includes('college')
-                          );
-                        }
-                        if (directoryCategory === 'FOOD_BANKS') {
-                          return (
-                            p.category === 'Survival_Relief' ||
-                            p.category === 'Culinary_Hospitality' ||
-                            hay.includes('food') ||
-                            hay.includes('meal') ||
-                            hay.includes('kitchen')
-                          );
-                        }
-                        if (directoryCategory === 'HANDS_ON') {
-                          return p.category !== 'Survival_Relief' && p.supports_high_skill_low_text;
-                        }
-                        return true;
-                      })
-                      .map((p) => {
-                        const isSavedMain = session.pinned_program_id === p.program_id;
-                        const isSavedRelief = session.pinned_relief_program_id === p.program_id;
-                        const isSaved = isSavedMain || isSavedRelief;
-                        return (
-                          <tr key={p.program_id} className="hover:bg-[#eef9f7] transition-colors">
-                            <td className="py-3 px-3.5 max-w-md">
-                              <div className="font-bold text-[#14343d]">{p.program_name}</div>
-                              <div className="text-[#1b7a6e] font-medium">{p.organization_name}</div>
-                              <div className="text-[11px] text-[#56737b] mt-0.5">{p.highlight_note}</div>
-                            </td>
-                            <td className="py-3 px-3.5">
-                              <div className="font-bold text-[#28505a]">{p.municipality}</div>
-                              <div className="text-[11px] text-[#4b6a73]">{p.nearest_transit_stop}</div>
-                            </td>
-                            <td className="py-3 px-3.5">
-                              <div className="font-semibold text-[#1f6a8f]">{p.contact_lead_name}</div>
-                              <div className="text-[11px] text-[#4b6a73]">{p.contact_phone_or_email}</div>
-                            </td>
-                            <td className="py-3 px-3.5">
-                              <div className="text-[#16796d] font-semibold">
-                                {p.supports_high_skill_low_text ? '✓ 100% Hands-On' : '✓ Calm Checklists'}
-                              </div>
-                              <div className="text-[11px] text-[#1f6a8f]">
-                                {p.offers_oral_or_practical_testing ? '✓ No Written Test' : 'Standard'} •{' '}
-                                {!p.requires_government_id ? 'No ID Needed' : 'ID Needed'}
-                              </div>
-                            </td>
-                            <td className="py-3 px-3.5 text-[#35535b]">
-                              {[
-                                p.provides_transit_tickets && 'Bus Tickets',
-                                p.provides_food_or_meals && 'Food / Hot Meals',
-                                p.provides_living_stipend && 'Training Pay',
-                                p.provides_gear_or_boots && 'Work Boots/Gear'
-                              ]
-                                .filter(Boolean)
-                                .join(' • ')}
-                            </td>
-                            <td className="py-3 px-3.5 text-right">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (p.category === 'Survival_Relief') {
-                                    handlePatchSession({
-                                      pinned_relief_program_id: p.program_id
-                                    });
-                                  } else {
-                                    handlePatchSession({
-                                      pinned_program_id: p.program_id,
-                                      next_micro_step_text: `Call ${p.contact_lead_name} (${p.contact_phone_or_email}) together for a friendly intro.`
-                                    });
-                                  }
-                                }}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition-all ${
-                                  isSaved
-                                    ? 'bg-[#2a9d8f] text-white'
-                                    : 'bg-white hover:bg-[#e6f6f3] text-[#1b7a6e] border border-[#bce5dd]'
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setDirectoryCategory(cat.id)}
+                              className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                active
+                                  ? 'ocean-btn text-white shadow-2xs'
+                                  : 'bg-white text-[#35565f] hover:bg-[#e6f6f3] border border-[#dcd4c4]'
+                              }`}
+                            >
+                              <span>{cat.label}</span>
+                              <span
+                                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                  active
+                                    ? 'bg-white/25 text-white'
+                                    : 'bg-[#edf6f4] text-[#1b7a6e]'
                                 }`}
                               >
-                                <Pin className="w-3.5 h-3.5" />
-                                {isSaved ? '✓ Saved' : 'Save to Phone'}
-                              </button>
-                            </td>
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Active Filter Summary Banner */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-[#35565f]">
+                      <div>
+                        Showing <strong className="text-[#14343d]">{finalFiltered.length}</strong> verified programs in{' '}
+                        <strong className="text-[#1b7a6e]">
+                          {directoryCity === 'All' ? 'All Lower Mainland Cities' : directoryCity}
+                        </strong>{' '}
+                        grouped across <strong className="text-[#14343d]">{groupedSections.length}</strong> category{' '}
+                        {groupedSections.length === 1 ? 'section' : 'sections'}.
+                      </div>
+                      {directoryCity !== 'All' && (
+                        <div className="text-[11px] text-[#4b6a73]">
+                          Includes programs located directly in <strong>{directoryCity}</strong> first, followed by regional lines serving {directoryCity}.
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="border-b border-[#e2d6c1] bg-[#f8f2e7] text-[#45636b] font-semibold">
+                            <th className="py-3 px-3.5 rounded-tl-xl">Program, Category &amp; Community Partner</th>
+                            <th className="py-3 px-3.5">City &amp; Nearest Transit</th>
+                            <th className="py-3 px-3.5">Contact Person &amp; Direct Numbers</th>
+                            <th className="py-3 px-3.5">Access &amp; ID Rules</th>
+                            <th className="py-3 px-3.5">Free Support Included</th>
+                            <th className="py-3 px-3.5 rounded-tr-xl text-right">Save to Phone</th>
                           </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </div>
+                        </thead>
+                        <tbody className="divide-y divide-[#ebe1d1]">
+                          {groupedSections.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className="py-8 px-4 text-center">
+                                <div className="text-sm font-bold text-[#14343d]">
+                                  No programs matched that exact filter in {directoryCity}.
+                                </div>
+                                <p className="text-xs text-[#4b6a73] mt-1">
+                                  Reset the city or category filter to browse all 78 verified Lower Mainland programs.
+                                </p>
+                              </td>
+                            </tr>
+                          )}
+                          {groupedSections.map(({ section, items }) => (
+                            <React.Fragment key={`section-${section.id}`}>
+                              <tr className="bg-gradient-to-r from-[#e7f5f2] via-[#edf6fa] to-[#f7f2e7] border-y-2 border-[#bce5dd]">
+                                <td colSpan={6} className="py-2.5 px-4">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span
+                                        className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border ${section.badgeClasses}`}
+                                      >
+                                        {section.shortBadge}
+                                      </span>
+                                      <span className="text-xs font-bold text-[#14343d]">
+                                        {section.title}
+                                      </span>
+                                      <span className="text-[11px] text-[#4b6a73] hidden md:inline">
+                                        — {section.subtitle}
+                                      </span>
+                                    </div>
+                                    <span className="text-[11px] font-bold text-[#1b7a6e] bg-white px-2.5 py-0.5 rounded-full border border-[#bce5dd]">
+                                      {items.length} {items.length === 1 ? 'Program' : 'Programs'}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                              {items.map((p) => {
+                                const isSavedMain = session.pinned_program_id === p.program_id;
+                                const isSavedRelief = session.pinned_relief_program_id === p.program_id;
+                                const isSaved = isSavedMain || isSavedRelief;
+                                const sectionMeta = getProgramSectionMeta(p);
+                                const contactBadges = parseContactBadges(p.contact_phone_or_email);
+                                const cityTier = getCityMatchTier(p, directoryCity);
+                                return (
+                                  <tr key={p.program_id} className="hover:bg-[#eef9f7] transition-colors bg-white/90">
+                                    <td className="py-3.5 px-3.5 max-w-md">
+                                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                        <span
+                                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${sectionMeta.badgeClasses}`}
+                                        >
+                                          {sectionMeta.shortBadge}
+                                        </span>
+                                        <span className="text-[11px] font-semibold text-[#1b7a6e]">
+                                          {p.organization_name}
+                                        </span>
+                                      </div>
+                                      <div className="font-bold text-[#14343d] text-xs">{p.program_name}</div>
+                                      <div className="text-[11px] text-[#4e6b73] mt-0.5 leading-relaxed">
+                                        {p.highlight_note}
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5 px-3.5">
+                                      <div className="font-bold text-[#14343d]">
+                                        {p.municipality}
+                                      </div>
+                                      {directoryCity !== 'All' &&
+                                        cityTier === 'regional' &&
+                                        p.municipality !== directoryCity && (
+                                          <span className="inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#eef6fb] text-[#1e5678] border border-[#c5e0f0]">
+                                            Serves {directoryCity}
+                                          </span>
+                                        )}
+                                      <div className="text-[11px] text-[#4b6a73] mt-0.5">
+                                        {p.nearest_transit_stop}
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5 px-3.5">
+                                      <div className="font-semibold text-[#14343d] mb-1">
+                                        {p.contact_lead_name}
+                                      </div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {contactBadges.map((b, bIdx) =>
+                                          b.href ? (
+                                            <a
+                                              key={`${p.program_id}-dir-contact-${bIdx}`}
+                                              href={b.href}
+                                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#f2faf8] hover:bg-[#dff3ee] border border-[#bce5dd] text-[#0f5248] font-semibold text-[11px] transition-colors"
+                                            >
+                                              <Phone className="w-3 h-3 text-[#1ca796]" />
+                                              {b.label !== 'Call' && b.label !== 'Email' ? `${b.label}: ` : ''}
+                                              {b.value}
+                                            </a>
+                                          ) : (
+                                            <span
+                                              key={`${p.program_id}-dir-contact-${bIdx}`}
+                                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#f8fafb] border border-[#dce7ec] text-[#2c525c] text-[11px]"
+                                            >
+                                              {b.value}
+                                            </span>
+                                          )
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5 px-3.5">
+                                      <div className="text-[#16796d] font-semibold">
+                                        {p.supports_high_skill_low_text ? '✓ 100% Hands-On' : '✓ Calm Walk-In / Phone'}
+                                      </div>
+                                      <div className="text-[11px] text-[#1f6a8f]">
+                                        {p.offers_oral_or_practical_testing ? '✓ No Written Test' : 'Standard'} •{' '}
+                                        {!p.requires_government_id ? 'No ID Needed' : 'ID Needed'}
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5 px-3.5 text-[#35535b]">
+                                      {[
+                                        p.provides_transit_tickets && 'Bus Tickets',
+                                        p.provides_food_or_meals && 'Food / Hot Meals',
+                                        p.provides_living_stipend && 'Money / Stipend',
+                                        p.provides_gear_or_boots && 'Gear / Supplies'
+                                      ]
+                                        .filter(Boolean)
+                                        .join(' • ') || 'Free Service'}
+                                    </td>
+                                    <td className="py-3.5 px-3.5 text-right">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (p.category === 'Survival_Relief') {
+                                            handlePatchSession({
+                                              pinned_relief_program_id: p.program_id
+                                            });
+                                          } else {
+                                            handlePatchSession({
+                                              pinned_program_id: p.program_id,
+                                              next_micro_step_text: `Call ${p.contact_lead_name} (${p.contact_phone_or_email}) together for a friendly intro.`
+                                            });
+                                          }
+                                        }}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition-all ${
+                                          isSaved
+                                            ? 'bg-[#2a9d8f] text-white'
+                                            : 'bg-white hover:bg-[#e6f6f3] text-[#1b7a6e] border border-[#bce5dd]'
+                                        }`}
+                                      >
+                                        <Pin className="w-3.5 h-3.5" />
+                                        {isSaved ? `✓ ${sectionMeta.savedLabel}` : sectionMeta.saveLabel}
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </React.Fragment>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
