@@ -361,17 +361,41 @@ io.on('connection', (socket) => {
   });
 });
 
+// Explicit JSON 404 handler for any unmatched /api/* route so Express never returns <!DOCTYPE html>
+app.all('/api/{*splat}', (req, res) => {
+  res.status(404).json({
+    error: `API endpoint not found: ${req.method} ${req.originalUrl}`
+  });
+});
+
 // Serve built frontend in production
 const distPath = path.resolve(__dirname, '../dist');
 app.use(express.static(distPath));
 app.get('/{*splat}', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
-    return next();
+    return res.status(404).json({ error: `Not found: ${req.originalUrl}` });
   }
   res.sendFile(path.join(distPath, 'index.html'), (err) => {
     if (err) next();
   });
 });
+
+// Global JSON error middleware so malformed JSON or server errors never return HTML
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    if (req.path.startsWith('/api')) {
+      return res.status(err?.status || 500).json({
+        error: err?.message || 'Unexpected server error'
+      });
+    }
+    res.status(500).send('Internal Server Error');
+  }
+);
 
 const PORT = Number(process.env.PORT || 4180);
 server.listen(PORT, '0.0.0.0', () => {
@@ -379,3 +403,17 @@ server.listen(PORT, '0.0.0.0', () => {
     `[Future Forward & Beyond] Co-Pilot Navigator API & WebSocket Server running on http://localhost:${PORT}`
   );
 });
+
+// Also listen on legacy local port 4170 when running locally so existing browser tabs on :4170 work seamlessly
+if (!process.env.PORT && PORT !== 4170) {
+  const legacyServer = http.createServer(app);
+  io.attach(legacyServer);
+  legacyServer.on('error', () => {
+    // Ignore if 4170 is unavailable
+  });
+  legacyServer.listen(4170, '0.0.0.0', () => {
+    console.log(
+      `[Future Forward & Beyond] Mirror listener active on http://localhost:4170`
+    );
+  });
+}
