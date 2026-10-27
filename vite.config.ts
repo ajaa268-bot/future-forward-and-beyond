@@ -16,7 +16,10 @@ export default defineConfig({
       '127.0.0.1'
     ],
     proxy: {
-      '/api': 'http://localhost:4180',
+      '/api': {
+        target: 'http://localhost:4180',
+        changeOrigin: true
+      },
       '/socket.io': {
         target: 'http://localhost:4180',
         ws: true
